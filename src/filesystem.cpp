@@ -25,41 +25,20 @@ FileSystem::FileSystem(QWidget *parent)
     ui->treeView_2->setModel(fileSysModel);
 
     auto deleteAction = new QAction("Delete", this);
-    deleteAction->setShortcut(QKeySequence(Qt::Key_D));
+    deleteAction->setShortcut(QKeySequence(Qt::Key_Delete));
     connect(deleteAction, SIGNAL(triggered()), this, SLOT(deleteItem()));
 
+    auto copyAction = new QAction("Copy", this);
+    copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+    connect(copyAction, SIGNAL(triggered()), this, SLOT(copyItemFrom()));
+
+    auto insertAction = new QAction("Insert", this);
+    insertAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_V));
+    connect(insertAction, SIGNAL(triggered()), this, SLOT(copyItemTo()));
+
     ui->treeView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->treeView_2->addActions({ deleteAction });
-
-
-//    ui->treeView_2->setContextMenuPolicy(Qt::CustomContextMenu);
-//    connect(ui->treeView_2, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
-//    contextMenu = new QMenu(ui->treeView_2);
-//    ui->treeView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
-//    deleteAction = new QAction("Delete",contextMenu);
-//    deleteAction->setShortcut(QKeySequence(Qt::Key_D));
-
-//    ui->treeView_2->addAction(deleteAction);
-
-
-//    connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_treeView_2_activated(QModelIndex)));
-
-
-
-//    shDel = new QShortcut(this);
-//    shDel->setKey(QKeySequence::Delete);
-
-//    connect(shDel, SIGNAL(activated()), this, SLOT(on_treeView_2_activated(QModelIndex)));
-
-    //connect(ui->treeView_2, SIGNAL(activated()), this, SLOT(on_treeView_2_activated(QModelIndex)));
-
-//    ui->systemFirst->setModel(fileSysModel);
-//    ui->systemSecond->setModel(fileSysModel);
-
-//    connect(ui->systemSecond, SIGNAL(doubleClicked(QModelIndex)),
-//            this, SLOT(on_systemFirst_doubleClicked(QModelIndex)));
+    ui->treeView_2->addActions({ copyAction, insertAction, deleteAction });
 }
-
 
 
 //void FileSystem::on_systemFirst_doubleClicked(const QModelIndex &index)
@@ -80,52 +59,58 @@ FileSystem::FileSystem(QWidget *parent)
 
 //}
 
-FileSystem::~FileSystem()
-{
-    delete ui;
-}
 
 void FileSystem::deleteItem() {
     qInfo() << "To delete!!!";
     QModelIndex index = ui->treeView_2->currentIndex();
     QFileInfo fileInfo = fileSysModel->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();
-    QString fileName = fileInfo.fileName();
-    qInfo() <<  absPath;
-    QFile file(absPath);
-    bool removed = file.remove();
-    qInfo() << removed;
+
+    if (fileInfo.isDir()) {
+        QDir dir(absPath);
+        qInfo() << absPath;
+        bool removedDir = dir.removeRecursively();
+        qInfo() << removedDir;
+    }
+    else if (fileInfo.isFile()){
+        QFile file(absPath);
+        bool removedFile = file.remove();
+        qInfo() << removedFile;
+    }
+
 }
 
 
-void FileSystem::on_treeView_2_doubleClicked(const QModelIndex &index)
-{
-   // QTreeView* treeViewDelete = (QTreeView*)sender();
-    qInfo() << "I am double clicked!!";
+void FileSystem::copyItemFrom() {
+    qInfo() << "To copy!!!";
+    QModelIndex index = ui->treeView_2->currentIndex();
     QFileInfo fileInfo = fileSysModel->fileInfo(index);
+
     QString absPath = fileInfo.absoluteFilePath();
-    QString fileName = fileInfo.fileName();
-    qInfo() <<  absPath;
-    QFile file(absPath);
-    //bool removed = file.remove();
-    bool copied = file.copy(fileName + "_copy");
+    fileNameToCopy = fileInfo.absoluteFilePath();
+    extension = fileInfo.completeSuffix();
+    baseNameFile = fileInfo.baseName();
+    copyFrom = absPath;
+}
+
+void FileSystem::copyItemTo() {
+    qInfo() << "To insert!!!";
+    QModelIndex index = ui->treeView_2->currentIndex();
+    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+
+    QString absPath = fileInfo.absoluteFilePath();
+    QString copyTo = absPath;
+    qInfo() << fileNameToCopy;
+    QFile file(fileNameToCopy);
+
+
+    bool copied = file.copy(copyTo + "/" + baseNameFile + "_copy." + extension);
     qInfo() << copied;
-
-
-    //QDir directory = fileInfo.dir();
-    //treeViewDelete->setRootIndex(fileSysModel->index(directory.absolutePath()));
-
 }
 
 
-void FileSystem::on_treeView_2_activated(const QModelIndex &index)
+
+FileSystem::~FileSystem()
 {
-    qInfo() << "I here to delete!!";
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
-    QString absPath = fileInfo.absoluteFilePath();
-    QString fileName = fileInfo.fileName();
-    qInfo() <<  absPath;
-    QFile file(absPath);
-    bool removed = file.remove();
-    qInfo() << removed;
+    delete ui;
 }

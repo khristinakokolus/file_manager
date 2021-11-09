@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 5.0.2, 2021-11-06T15:30:02. -->
+<!-- Written by QtCreator 5.0.2, 2021-11-08T12:10:03. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -237,9 +237,8 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">filesystem22</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:D:/UCU/Third/OS/file_manager_project/src/filesystem2.pro</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">D:/UCU/Third/OS/file_manager_project/src/filesystem2.pro</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:D:/UCU/Third/OS/os_project_git/file_manager/src/filesystem.pro</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">D:/UCU/Third/OS/os_project_git/file_manager/src/filesystem.pro</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
