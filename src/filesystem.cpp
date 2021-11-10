@@ -6,6 +6,8 @@
 #include <QShortcut>
 #include <QDir>
 #include <QDebug>
+#include <QTextEdit>
+#include <QMessageBox>
 
 FileSystem::FileSystem(QWidget *parent)
     : QMainWindow(parent)
@@ -36,34 +38,40 @@ FileSystem::FileSystem(QWidget *parent)
     insertAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_V));
     connect(insertAction, SIGNAL(triggered()), this, SLOT(copyItemTo()));
 
+    auto openAction = new QAction("Open", this);
+    openAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
+    connect(openAction, SIGNAL(triggered()), this, SLOT(openFile()));
+
+    auto renameAction = new QAction("Rename", this);
+    renameAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
+    connect(renameAction, SIGNAL(triggered()), this, SLOT(renameItem()));
+
+    ui->treeView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ui->treeView->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction });
+
     ui->treeView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->treeView_2->addActions({ copyAction, insertAction, deleteAction });
+    ui->treeView_2->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction });
+
+    connect(ui->treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(assignIndex(QModelIndex)));
+    connect(ui->treeView_2, SIGNAL(clicked(QModelIndex)), this, SLOT(assignIndex(QModelIndex)));
 }
 
 
-//void FileSystem::on_systemFirst_doubleClicked(const QModelIndex &index)
-//{
-//    QListView* listView = (QListView*)sender();
-//    QFileInfo fileInfo = fileSysModel->fileInfo(index);
-//    if (fileInfo.fileName() == "..") {
-//       QDir directory = fileInfo.dir();
-//       directory.cdUp();
-//       listView->setRootIndex(fileSysModel->index(directory.absolutePath()));
-//    }
-//    else if (fileInfo.fileName() == ".") {
-//        listView->setRootIndex(fileSysModel->index(""));
-//    }
-//    else if (fileInfo.isDir()) {
-//        listView->setRootIndex(index);
-//    }
-
-//}
-
 
 void FileSystem::deleteItem() {
-    qInfo() << "To delete!!!";
-    QModelIndex index = ui->treeView_2->currentIndex();
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QMessageBox quitMsg;
+    quitMsg.setWindowTitle("FileSystem");
+    quitMsg.setText("Do you really want to delete?");
+    quitMsg.setStandardButtons(QMessageBox::Yes |
+    QMessageBox::Cancel);
+    quitMsg.setDefaultButton(QMessageBox::Cancel);
+    if (quitMsg.exec() == QMessageBox::Yes)
+        deletion();
+
+}
+
+void FileSystem::deletion() {
+    QFileInfo fileInfo = fileSysModel->fileInfo(fileFolderIndex);
     QString absPath = fileInfo.absoluteFilePath();
 
     if (fileInfo.isDir()) {
@@ -77,14 +85,11 @@ void FileSystem::deleteItem() {
         bool removedFile = file.remove();
         qInfo() << removedFile;
     }
-
 }
 
 
 void FileSystem::copyItemFrom() {
-    qInfo() << "To copy!!!";
-    QModelIndex index = ui->treeView_2->currentIndex();
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QFileInfo fileInfo = fileSysModel->fileInfo(fileFolderIndex);
 
     QString absPath = fileInfo.absoluteFilePath();
     fileNameToCopy = fileInfo.absoluteFilePath();
@@ -93,19 +98,39 @@ void FileSystem::copyItemFrom() {
     copyFrom = absPath;
 }
 
+
 void FileSystem::copyItemTo() {
-    qInfo() << "To insert!!!";
-    QModelIndex index = ui->treeView_2->currentIndex();
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QFileInfo fileInfo = fileSysModel->fileInfo(fileFolderIndex);
 
     QString absPath = fileInfo.absoluteFilePath();
     QString copyTo = absPath;
-    qInfo() << fileNameToCopy;
     QFile file(fileNameToCopy);
 
-
+    qInfo() << copyTo + "/" + baseNameFile + "_copy." + extension;
     bool copied = file.copy(copyTo + "/" + baseNameFile + "_copy." + extension);
     qInfo() << copied;
+}
+
+void FileSystem::openFile() {
+    QFileInfo fileInfo = fileSysModel->fileInfo(fileFolderIndex);
+    QString absPath = fileInfo.absoluteFilePath();
+    qInfo() << fileFolderIndex;
+    qInfo() << absPath;
+    QFile file(absPath);
+
+    file.open(QFile::ReadOnly | QFile::Text);
+    QTextEdit *txt = new QTextEdit();
+    QTextStream ReadFile(&file);
+    txt->setText(ReadFile.readAll());
+    txt->show();
+}
+
+void FileSystem::renameItem() {
+
+}
+
+void FileSystem::assignIndex(const QModelIndex &index) {
+    fileFolderIndex = index;
 }
 
 

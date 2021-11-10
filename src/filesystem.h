@@ -15,12 +15,17 @@ class FileSystem : public QMainWindow
 
 public:
     explicit FileSystem(QWidget *parent = nullptr);
+    void deletion();
     ~FileSystem();
 
 private slots:
+    void assignIndex(const QModelIndex &index);
     void deleteItem();
     void copyItemFrom();
     void copyItemTo();
+    void openFile();
+    void renameItem();
+
 
 private:
     Ui::FileSystem *ui;
@@ -28,6 +33,9 @@ private:
     QAction* deleteAction;
     QAction* copyAction;
     QAction* insertAction;
+    QAction* openAction;
+    QAction* renameAction;
+    QModelIndex fileFolderIndex;
     QString fileNameToCopy;
     QString extension;
     QString baseNameFile;
