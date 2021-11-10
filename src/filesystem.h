@@ -19,10 +19,11 @@ public:
     ~FileSystem();
 
 private slots:
-    void assignIndex(const QModelIndex &index);
+    void clickedFirst(const QModelIndex &index);
+    void clickedSecond(const QModelIndex &index);
     void deleteItem();
-    void copyItemFrom();
-    void copyItemTo();
+    void copyItemFrom(QString copyFromPath=QString());
+    void copyItemTo(QString copyToPath=QString());
     void openFile();
     void renameItem();
 
@@ -36,12 +37,17 @@ private:
     QAction* openAction;
     QAction* renameAction;
     QModelIndex fileFolderIndex;
+    QMenu* contextMenu;
+    bool clickedTreeViewFirst;
+    bool clickedTreeViewSecond;
     QString fileNameToCopy;
     QString extension;
     QString baseNameFile;
     QString copyFrom;
+    QStringList files;
+    QString dirName;
     QString copyTo;
-    QMenu* contextMenu;
+    QMap<QString, QPair<QString, QString>> map;
 
 };
 

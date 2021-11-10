@@ -17,14 +17,18 @@ FileSystem::FileSystem(QWidget *parent)
 
     QString sysPath = "";
     fileSysModel = new QFileSystemModel(this);
-    //fileSysModel->setFilter(QDir::QDir::AllEntries);
     fileSysModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files );
     fileSysModel->setRootPath(sysPath);
 
     qInfo() << "Start!!";
+    clickedTreeViewFirst = false;
+    clickedTreeViewSecond = false;
 
     ui->treeView->setModel(fileSysModel);
     ui->treeView_2->setModel(fileSysModel);
+
+    connect(ui->treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedFirst(QModelIndex)));
+    connect(ui->treeView_2, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedSecond(QModelIndex)));
 
     auto deleteAction = new QAction("Delete", this);
     deleteAction->setShortcut(QKeySequence(Qt::Key_Delete));
@@ -51,9 +55,6 @@ FileSystem::FileSystem(QWidget *parent)
 
     ui->treeView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->treeView_2->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction });
-
-    connect(ui->treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(assignIndex(QModelIndex)));
-    connect(ui->treeView_2, SIGNAL(clicked(QModelIndex)), this, SLOT(assignIndex(QModelIndex)));
 }
 
 
@@ -71,68 +72,221 @@ void FileSystem::deleteItem() {
 }
 
 void FileSystem::deletion() {
-    QFileInfo fileInfo = fileSysModel->fileInfo(fileFolderIndex);
+    QModelIndex index;
+    qInfo() << clickedTreeViewFirst;
+    qInfo() << clickedTreeViewSecond;
+
+    if (clickedTreeViewFirst == true) {
+        index = ui->treeView->currentIndex();
+        clickedTreeViewFirst = false;
+    }
+    else if (clickedTreeViewSecond == true) {
+        index = ui->treeView_2->currentIndex();
+        clickedTreeViewSecond = false;
+    }
+
+    QFileInfo fileInfo = fileSysModel->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();
+
 
     if (fileInfo.isDir()) {
-        QDir dir(absPath);
-        qInfo() << absPath;
-        bool removedDir = dir.removeRecursively();
-        qInfo() << removedDir;
-    }
-    else if (fileInfo.isFile()){
-        QFile file(absPath);
-        bool removedFile = file.remove();
-        qInfo() << removedFile;
-    }
+            QDir dir(absPath);
+            qInfo() << absPath;
+            bool removedDir = dir.removeRecursively();
+            qInfo() << removedDir;
+            if (!removedDir){
+                qInfo() << "here";
+                QMessageBox quitMsg;
+                quitMsg.setWindowTitle("FileSystem");
+                quitMsg.setText("An error occurred - " + dir.dirName() + " directory cannot be deleted now.");
+                quitMsg.setStandardButtons(QMessageBox::Ok);
+                quitMsg.setDefaultButton(QMessageBox::Ok);
+                if (quitMsg.exec() == QMessageBox::Ok)
+                    return;
+            }
+        }
+        else if (fileInfo.isFile()){
+            QFile file(absPath);
+            bool removedFile = file.remove();
+            qInfo() << removedFile;
+            if (!removedFile){
+                QMessageBox quitMsg;
+                quitMsg.setWindowTitle("FileSystem");
+                quitMsg.setText("An error occurred - " + file.fileName() + " cannot be deleted now.");
+                quitMsg.setStandardButtons(QMessageBox::Ok);
+                quitMsg.setDefaultButton(QMessageBox::Ok);
+                if (quitMsg.exec() == QMessageBox::Ok)
+                    return;
+            }
+        }
 }
 
 
-void FileSystem::copyItemFrom() {
-    QFileInfo fileInfo = fileSysModel->fileInfo(fileFolderIndex);
+void FileSystem::copyItemFrom(QString copyFromPath) {
+    QModelIndex index;
+    if (clickedTreeViewFirst == true) {
+        index = ui->treeView->currentIndex();
+        clickedTreeViewFirst = false;
+    }
+    else if (clickedTreeViewSecond == true) {
+        index = ui->treeView_2->currentIndex();
+        clickedTreeViewSecond = false;
+    }
+    QFileInfo fileInfo = fileSysModel->fileInfo(index);
 
     QString absPath = fileInfo.absoluteFilePath();
-    fileNameToCopy = fileInfo.absoluteFilePath();
-    extension = fileInfo.completeSuffix();
-    baseNameFile = fileInfo.baseName();
-    copyFrom = absPath;
+    fileNameToCopy = QString();
+        extension = QString();
+        baseNameFile = QString();
+
+        if (copyFromPath.isNull()) {
+            copyFrom = absPath;
+        }
+        else {
+            copyFrom = copyFromPath;
+        }
+
+        QDir sourceDir(copyFrom);
+        if(!sourceDir.exists()){
+            fileNameToCopy = fileInfo.absoluteFilePath();
+            extension = fileInfo.completeSuffix();
+            baseNameFile = fileInfo.baseName();
+        }
+
+        files = sourceDir.entryList(QDir::Files);
+        dirName = sourceDir.dirName();
 }
 
 
-void FileSystem::copyItemTo() {
-    QFileInfo fileInfo = fileSysModel->fileInfo(fileFolderIndex);
+void FileSystem::copyItemTo(QString copyToPath) {
+    QModelIndex index;
+    qInfo() << clickedTreeViewFirst;
+    qInfo() << clickedTreeViewSecond;
+
+    if (clickedTreeViewFirst == true) {
+        index = ui->treeView->currentIndex();
+        clickedTreeViewFirst = false;
+    }
+    else if (clickedTreeViewSecond == true) {
+        index = ui->treeView_2->currentIndex();
+        clickedTreeViewSecond = false;
+    }
+    QFileInfo fileInfo = fileSysModel->fileInfo(index);
 
     QString absPath = fileInfo.absoluteFilePath();
-    QString copyTo = absPath;
-    QFile file(fileNameToCopy);
+    if(!fileNameToCopy.isNull()) {
+            copyTo = absPath;
+            QFile file(fileNameToCopy);
+            //qInfo() << fileNameToCopy;
+            bool copied = file.copy(copyTo + "/" + baseNameFile + "_copy." + extension);
+            if (!copied) {
+                QMessageBox quitMsg;
+                quitMsg.setWindowTitle("FileSystem");
+                quitMsg.setText("An error occurred - "+ file.fileName() + " cannot be copied.");
+                quitMsg.setStandardButtons(QMessageBox::Ok);
+                quitMsg.setDefaultButton(QMessageBox::Ok);
+                if (quitMsg.exec() == QMessageBox::Ok)
+                    return;
+            }
+            //qInfo() << copied;
+            return;
+        }
 
-    qInfo() << copyTo + "/" + baseNameFile + "_copy." + extension;
-    bool copied = file.copy(copyTo + "/" + baseNameFile + "_copy." + extension);
-    qInfo() << copied;
-}
+        if (copyToPath.isNull()) {
+            copyTo = absPath + "/" + dirName;
+            QDir destDir(copyTo);
+            destDir.mkdir(copyTo);
+        }
+        else {
+            copyTo = copyToPath;
+            QDir destDir(copyTo);
+            if(!destDir.exists()) {
+                destDir.mkdir(copyTo);
+            }
+        }
+
+        for(int i = 0; i< files.count(); i++) {
+            //qInfo() << files[i];
+            QFile file(files[i]);
+            QFileInfo fileInfo(files[i]);
+            extension = fileInfo.completeSuffix();
+            baseNameFile = fileInfo.baseName();
+            bool copied = file.copy(copyFrom + "/" + files[i], copyTo + "/" + baseNameFile + "_copy." + extension);
+            if (!copied) {
+                QMessageBox quitMsg;
+                quitMsg.setWindowTitle("FileSystem");
+                quitMsg.setText("An error occurred - " + files[i] + " this file cannot be copied.");
+                quitMsg.setStandardButtons(QMessageBox::Ok);
+                quitMsg.setDefaultButton(QMessageBox::Ok);
+                if (quitMsg.exec() == QMessageBox::Ok)
+                    return;
+            }
+            //qInfo() << copied;
+        }
+        files.clear();
+        QDir sourceDir(copyFrom);
+        files = sourceDir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+        for(int i = 0; i< files.count(); i++) {
+            map.insert(dirName+"/"+files[i], qMakePair(copyFrom, copyTo));
+        }
+
+        for(int i = 0; i< files.count(); i++) {
+            map.remove(dirName+"/"+files[i]);
+            FileSystem::copyItemFrom(copyFrom + "/" + files[i]);
+            FileSystem::copyItemTo(copyTo + "/" + dirName);
+        }
+        if(!(map.isEmpty())) {
+            QString from = map.first().first;
+            QString to = map.first().second;
+            FileSystem::copyItemFrom(from + "/" + map.firstKey().split('/')[1]);
+            map.remove(map.firstKey());
+            FileSystem::copyItemTo(to + "/" + dirName);
+        }
+    }
 
 void FileSystem::openFile() {
-    QFileInfo fileInfo = fileSysModel->fileInfo(fileFolderIndex);
-    QString absPath = fileInfo.absoluteFilePath();
-    qInfo() << fileFolderIndex;
-    qInfo() << absPath;
+    QModelIndex index;
+    if (clickedTreeViewFirst == true) {
+        index = ui->treeView->currentIndex();
+        clickedTreeViewFirst = false;
+    }
+    else if (clickedTreeViewSecond == true) {
+        index = ui->treeView_2->currentIndex();
+        clickedTreeViewSecond = false;
+    }
+
+    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();;
     QFile file(absPath);
 
-    file.open(QFile::ReadOnly | QFile::Text);
-    QTextEdit *txt = new QTextEdit();
-    QTextStream ReadFile(&file);
-    txt->setText(ReadFile.readAll());
-    txt->show();
+    bool opened = file.open(QFile::ReadOnly | QFile::Text);
+        if ( !opened ) {
+            QMessageBox::critical(
+                this,
+                tr("Open failed"),
+                tr("Could not open file for reading: %1\n%2").arg(file.fileName(), file.errorString() )
+                );
+            return;
+        }
+
+        QTextEdit *txt = new QTextEdit();
+        QTextStream ReadFile(&file);
+        txt->setText(ReadFile.readAll());
+        txt->show();
 }
 
 void FileSystem::renameItem() {
 
 }
 
-void FileSystem::assignIndex(const QModelIndex &index) {
-    fileFolderIndex = index;
+void FileSystem::clickedFirst(const QModelIndex &index) {
+    clickedTreeViewFirst = true;
 }
 
+
+void FileSystem::clickedSecond(const QModelIndex &index) {
+    clickedTreeViewSecond = true;
+}
 
 
 FileSystem::~FileSystem()
