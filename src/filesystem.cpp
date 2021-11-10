@@ -8,7 +8,7 @@
 #include <QDebug>
 #include <QTextEdit>
 #include <QMessageBox>
-
+#include <QInputDialog>
 FileSystem::FileSystem(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::FileSystem)
@@ -276,7 +276,54 @@ void FileSystem::openFile() {
 }
 
 void FileSystem::renameItem() {
+    QModelIndex index;
+    if (clickedTreeViewFirst == true) {
+        index = ui->treeView->currentIndex();
+        clickedTreeViewFirst = false;
+    }
+    else if (clickedTreeViewSecond == true) {
+        index = ui->treeView_2->currentIndex();
+        clickedTreeViewSecond = false;
+    }
+    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();
 
+    bool ok;
+       // Ask for birth date as a string.
+       QString text = QInputDialog::getText(0, "Input dialog",
+                                            "New name:", QLineEdit::Normal,
+                                            "", &ok);
+       if (ok && !text.isEmpty()) {
+           if (fileInfo.isDir()) {
+                   QDir dir(absPath);
+                   qInfo() << absPath;
+                   bool renamedDir = dir.rename(dir.path(), fileInfo.dir().absolutePath()+'/'+text);
+                   qInfo() << renamedDir;
+                   if (!renamedDir){
+                       QMessageBox quitMsg;
+                       quitMsg.setWindowTitle("FileSystem");
+                       quitMsg.setText("An error occurred - " + dir.path() + " directory cannot be renamed.");
+                       quitMsg.setStandardButtons(QMessageBox::Ok);
+                       quitMsg.setDefaultButton(QMessageBox::Ok);
+                       if (quitMsg.exec() == QMessageBox::Ok)
+                           return;
+                   }
+               }
+               else if (fileInfo.isFile()){
+                   QFile file(absPath);
+                   bool renamedFile = file.rename(file.fileName(), fileInfo.absolutePath()+'/'+text);
+                   qInfo() << renamedFile;
+                   if (!renamedFile){
+                       QMessageBox quitMsg;
+                       quitMsg.setWindowTitle("FileSystem");
+                       quitMsg.setText("An error occurred - " + file.fileName() + " cannot be renamed.");
+                       quitMsg.setStandardButtons(QMessageBox::Ok);
+                       quitMsg.setDefaultButton(QMessageBox::Ok);
+                       if (quitMsg.exec() == QMessageBox::Ok)
+                           return;
+                   }
+           }
+      }
 }
 
 void FileSystem::clickedFirst(const QModelIndex &index) {
