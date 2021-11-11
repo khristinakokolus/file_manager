@@ -9,6 +9,7 @@
 #include <QTextEdit>
 #include <QMessageBox>
 #include <QInputDialog>
+
 FileSystem::FileSystem(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::FileSystem)
@@ -20,7 +21,6 @@ FileSystem::FileSystem(QWidget *parent)
     fileSysModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files );
     fileSysModel->setRootPath(sysPath);
 
-    qInfo() << "Start!!";
     clickedTreeViewFirst = false;
     clickedTreeViewSecond = false;
 
@@ -81,10 +81,8 @@ void FileSystem::deleteItem() {
 
 }
 
-void FileSystem::deletion() {
+QModelIndex FileSystem::getIndex() {
     QModelIndex index;
-    qInfo() << clickedTreeViewFirst;
-    qInfo() << clickedTreeViewSecond;
 
     if (clickedTreeViewFirst == true) {
         index = ui->treeView->currentIndex();
@@ -94,6 +92,13 @@ void FileSystem::deletion() {
         index = ui->treeView_2->currentIndex();
         clickedTreeViewSecond = false;
     }
+    return index;
+
+}
+
+
+void FileSystem::deletion() {
+    QModelIndex index = getIndex();
 
     QFileInfo fileInfo = fileSysModel->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();
@@ -126,15 +131,8 @@ void FileSystem::deletion() {
 
 
 void FileSystem::copyItemFrom(QString copyFromPath) {
-    QModelIndex index;
-    if (clickedTreeViewFirst == true) {
-        index = ui->treeView->currentIndex();
-        clickedTreeViewFirst = false;
-    }
-    else if (clickedTreeViewSecond == true) {
-        index = ui->treeView_2->currentIndex();
-        clickedTreeViewSecond = false;
-    }
+    QModelIndex index = getIndex();
+
     QFileInfo fileInfo = fileSysModel->fileInfo(index);
 
     QString absPath = fileInfo.absoluteFilePath();
@@ -162,18 +160,8 @@ void FileSystem::copyItemFrom(QString copyFromPath) {
 
 
 void FileSystem::copyItemTo(QString copyToPath) {
-    QModelIndex index;
-    qInfo() << clickedTreeViewFirst;
-    qInfo() << clickedTreeViewSecond;
+    QModelIndex index = getIndex();
 
-    if (clickedTreeViewFirst == true) {
-        index = ui->treeView->currentIndex();
-        clickedTreeViewFirst = false;
-    }
-    else if (clickedTreeViewSecond == true) {
-        index = ui->treeView_2->currentIndex();
-        clickedTreeViewSecond = false;
-    }
     QFileInfo fileInfo = fileSysModel->fileInfo(index);
 
     QString absPath = fileInfo.absoluteFilePath();
@@ -181,7 +169,8 @@ void FileSystem::copyItemTo(QString copyToPath) {
             copyTo = absPath;
             QFile file(fileNameToCopy);
             bool copied = false;
-            auto new_name = copyTo + "/" + baseNameFile + "_copy";
+            auto new_name = copyTo + "/" + baseNameFile;
+            qInfo() << new_name + "." + extension;
 
             if (!QFileInfo::exists(new_name + "." + extension)){
                 copied = file.copy(new_name + "." + extension);
@@ -190,10 +179,9 @@ void FileSystem::copyItemTo(QString copyToPath) {
                 copied = file.copy(new_name + "_copy" + "." + extension);
             }
             if (!copied) {
-                windowMessage(file,"Copy failed", "Could not copy file: %1\n%2");
+                windowMessage(file, "Copy failed", "Could not copy file: %1\n%2");
                 return;
             }
-            //qInfo() << copied;
             return;
         }
 
@@ -210,12 +198,11 @@ void FileSystem::copyItemTo(QString copyToPath) {
 
 
         for(int i = 0; i< files.count(); i++) {
-            //qInfo() << files[i];
             QFile file(files[i]);
             QFileInfo fileInfo(files[i]);
             extension = fileInfo.completeSuffix();
             baseNameFile = fileInfo.baseName();
-            auto new_name = copyTo + "/" + baseNameFile + "_copy";
+            auto new_name = copyTo + "/" + baseNameFile;
             bool copied = false;
             if (!QFileInfo::exists(new_name + "." + extension)){
                 copied = file.copy(copyFrom + "/" + files[i], new_name + "." + extension);
@@ -224,9 +211,8 @@ void FileSystem::copyItemTo(QString copyToPath) {
                 copied = file.copy(copyFrom + "/" + files[i], new_name + "_copy" + "." + extension);
             }
             if (!copied) {
-                windowMessage(file,"Copy failed", "Could not copy file: %1\n%2");
+                windowMessage(file, "Copy failed", "Could not copy file: %1\n%2");
             }
-            //qInfo() << copied;
         }
         files.clear();
         QDir sourceDir(copyFrom);
@@ -250,15 +236,7 @@ void FileSystem::copyItemTo(QString copyToPath) {
     }
 
 void FileSystem::openFile() {
-    QModelIndex index;
-    if (clickedTreeViewFirst == true) {
-        index = ui->treeView->currentIndex();
-        clickedTreeViewFirst = false;
-    }
-    else if (clickedTreeViewSecond == true) {
-        index = ui->treeView_2->currentIndex();
-        clickedTreeViewSecond = false;
-    }
+    QModelIndex index = getIndex();
 
     QFileInfo fileInfo = fileSysModel->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();;
@@ -266,7 +244,7 @@ void FileSystem::openFile() {
 
     bool opened = file.open(QFile::ReadOnly | QFile::Text);
         if ( !opened ) {
-            windowMessage(file,"Open failed", "Could not open file for reading: %1\n%2");
+            windowMessage(file, "Open failed", "Could not open file for reading: %1\n%2");
             return;
         }
 
@@ -277,15 +255,8 @@ void FileSystem::openFile() {
 }
 
 void FileSystem::renameItem() {
-    QModelIndex index;
-    if (clickedTreeViewFirst == true) {
-        index = ui->treeView->currentIndex();
-        clickedTreeViewFirst = false;
-    }
-    else if (clickedTreeViewSecond == true) {
-        index = ui->treeView_2->currentIndex();
-        clickedTreeViewSecond = false;
-    }
+    QModelIndex index = getIndex();
+
     QFileInfo fileInfo = fileSysModel->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();
 
@@ -310,7 +281,8 @@ void FileSystem::renameItem() {
                }
                else if (fileInfo.isFile()){
                    QFile file(absPath);
-                   bool renamedFile = file.rename(file.fileName(), fileInfo.absolutePath()+'/'+text);
+                   extension = fileInfo.completeSuffix();
+                   bool renamedFile = file.rename(file.fileName(), fileInfo.absolutePath()+'/'+text + "." + extension);
                    qInfo() << renamedFile;
                    if (!renamedFile){
                        windowMessage(file,"Rename failed", "Could not rename file: %1\n%2");

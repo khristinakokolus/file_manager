@@ -15,6 +15,7 @@ class FileSystem : public QMainWindow
 
 public:
     explicit FileSystem(QWidget *parent = nullptr);
+    QModelIndex getIndex();
     void deletion();
     ~FileSystem();
 
