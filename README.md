@@ -57,7 +57,7 @@ Initial view of filesystem:
 
 Commands that are now supported:
 
-![image](https://user-images.githubusercontent.com/60686300/141324618-b8e381b4-86a0-46cc-8fef-d0d11ad3b80d.png)
+![image](https://user-images.githubusercontent.com/60686300/141326493-4812261c-9d11-407c-b020-154c31ca8d75.png))
 
 
 ## First presentation
