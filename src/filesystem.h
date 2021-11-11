@@ -26,7 +26,7 @@ private slots:
     void copyItemTo(QString copyToPath=QString());
     void openFile();
     void renameItem();
-
+    void windowMessage(QFile& file,const char *name, const char *text);
 
 private:
     Ui::FileSystem *ui;

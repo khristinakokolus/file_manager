@@ -59,6 +59,16 @@ FileSystem::FileSystem(QWidget *parent)
 
 
 
+void FileSystem::windowMessage(QFile& file, const char *name, const char *text){
+    QMessageBox::critical(
+        this,
+        tr(name),
+        tr(text).arg(file.fileName(), file.errorString() )
+        );
+    return;
+}
+
+
 void FileSystem::deleteItem() {
     QMessageBox quitMsg;
     quitMsg.setWindowTitle("FileSystem");
@@ -95,14 +105,12 @@ void FileSystem::deletion() {
             bool removedDir = dir.removeRecursively();
             qInfo() << removedDir;
             if (!removedDir){
-                qInfo() << "here";
-                QMessageBox quitMsg;
-                quitMsg.setWindowTitle("FileSystem");
-                quitMsg.setText("An error occurred - " + dir.dirName() + " directory cannot be deleted now.");
-                quitMsg.setStandardButtons(QMessageBox::Ok);
-                quitMsg.setDefaultButton(QMessageBox::Ok);
-                if (quitMsg.exec() == QMessageBox::Ok)
-                    return;
+                QMessageBox::critical(
+                    this,
+                    tr("Remove failed"),
+                    tr("Could not delete directory: %1").arg(dir.dirName())
+                    );
+                return;
             }
         }
         else if (fileInfo.isFile()){
@@ -110,13 +118,8 @@ void FileSystem::deletion() {
             bool removedFile = file.remove();
             qInfo() << removedFile;
             if (!removedFile){
-                QMessageBox quitMsg;
-                quitMsg.setWindowTitle("FileSystem");
-                quitMsg.setText("An error occurred - " + file.fileName() + " cannot be deleted now.");
-                quitMsg.setStandardButtons(QMessageBox::Ok);
-                quitMsg.setDefaultButton(QMessageBox::Ok);
-                if (quitMsg.exec() == QMessageBox::Ok)
-                    return;
+                windowMessage(file,"Remove failed", "Could not delete file: %1\n%2");
+                return;
             }
         }
 }
@@ -177,16 +180,18 @@ void FileSystem::copyItemTo(QString copyToPath) {
     if(!fileNameToCopy.isNull()) {
             copyTo = absPath;
             QFile file(fileNameToCopy);
-            //qInfo() << fileNameToCopy;
-            bool copied = file.copy(copyTo + "/" + baseNameFile + "_copy." + extension);
+            bool copied = false;
+            auto new_name = copyTo + "/" + baseNameFile + "_copy";
+
+            if (!QFileInfo::exists(new_name + "." + extension)){
+                copied = file.copy(new_name + "." + extension);
+            }
+            else{
+                copied = file.copy(new_name + "_copy" + "." + extension);
+            }
             if (!copied) {
-                QMessageBox quitMsg;
-                quitMsg.setWindowTitle("FileSystem");
-                quitMsg.setText("An error occurred - "+ file.fileName() + " cannot be copied.");
-                quitMsg.setStandardButtons(QMessageBox::Ok);
-                quitMsg.setDefaultButton(QMessageBox::Ok);
-                if (quitMsg.exec() == QMessageBox::Ok)
-                    return;
+                windowMessage(file,"Copy failed", "Could not copy file: %1\n%2");
+                return;
             }
             //qInfo() << copied;
             return;
@@ -194,16 +199,15 @@ void FileSystem::copyItemTo(QString copyToPath) {
 
         if (copyToPath.isNull()) {
             copyTo = absPath + "/" + dirName;
-            QDir destDir(copyTo);
-            destDir.mkdir(copyTo);
         }
         else {
             copyTo = copyToPath;
+        }
             QDir destDir(copyTo);
             if(!destDir.exists()) {
                 destDir.mkdir(copyTo);
             }
-        }
+
 
         for(int i = 0; i< files.count(); i++) {
             //qInfo() << files[i];
@@ -211,15 +215,16 @@ void FileSystem::copyItemTo(QString copyToPath) {
             QFileInfo fileInfo(files[i]);
             extension = fileInfo.completeSuffix();
             baseNameFile = fileInfo.baseName();
-            bool copied = file.copy(copyFrom + "/" + files[i], copyTo + "/" + baseNameFile + "_copy." + extension);
+            auto new_name = copyTo + "/" + baseNameFile + "_copy";
+            bool copied = false;
+            if (!QFileInfo::exists(new_name + "." + extension)){
+                copied = file.copy(copyFrom + "/" + files[i], new_name + "." + extension);
+            }
+            else{
+                copied = file.copy(copyFrom + "/" + files[i], new_name + "_copy" + "." + extension);
+            }
             if (!copied) {
-                QMessageBox quitMsg;
-                quitMsg.setWindowTitle("FileSystem");
-                quitMsg.setText("An error occurred - " + files[i] + " this file cannot be copied.");
-                quitMsg.setStandardButtons(QMessageBox::Ok);
-                quitMsg.setDefaultButton(QMessageBox::Ok);
-                if (quitMsg.exec() == QMessageBox::Ok)
-                    return;
+                windowMessage(file,"Copy failed", "Could not copy file: %1\n%2");
             }
             //qInfo() << copied;
         }
@@ -261,11 +266,7 @@ void FileSystem::openFile() {
 
     bool opened = file.open(QFile::ReadOnly | QFile::Text);
         if ( !opened ) {
-            QMessageBox::critical(
-                this,
-                tr("Open failed"),
-                tr("Could not open file for reading: %1\n%2").arg(file.fileName(), file.errorString() )
-                );
+            windowMessage(file,"Open failed", "Could not open file for reading: %1\n%2");
             return;
         }
 
@@ -289,7 +290,6 @@ void FileSystem::renameItem() {
     QString absPath = fileInfo.absoluteFilePath();
 
     bool ok;
-       // Ask for birth date as a string.
        QString text = QInputDialog::getText(0, "Input dialog",
                                             "New name:", QLineEdit::Normal,
                                             "", &ok);
@@ -300,13 +300,12 @@ void FileSystem::renameItem() {
                    bool renamedDir = dir.rename(dir.path(), fileInfo.dir().absolutePath()+'/'+text);
                    qInfo() << renamedDir;
                    if (!renamedDir){
-                       QMessageBox quitMsg;
-                       quitMsg.setWindowTitle("FileSystem");
-                       quitMsg.setText("An error occurred - " + dir.path() + " directory cannot be renamed.");
-                       quitMsg.setStandardButtons(QMessageBox::Ok);
-                       quitMsg.setDefaultButton(QMessageBox::Ok);
-                       if (quitMsg.exec() == QMessageBox::Ok)
-                           return;
+                       QMessageBox::critical(
+                           this,
+                           tr("Rename failed"),
+                           tr("Could not rename directory: %1").arg(dir.dirName())
+                           );
+                       return;
                    }
                }
                else if (fileInfo.isFile()){
@@ -314,13 +313,8 @@ void FileSystem::renameItem() {
                    bool renamedFile = file.rename(file.fileName(), fileInfo.absolutePath()+'/'+text);
                    qInfo() << renamedFile;
                    if (!renamedFile){
-                       QMessageBox quitMsg;
-                       quitMsg.setWindowTitle("FileSystem");
-                       quitMsg.setText("An error occurred - " + file.fileName() + " cannot be renamed.");
-                       quitMsg.setStandardButtons(QMessageBox::Ok);
-                       quitMsg.setDefaultButton(QMessageBox::Ok);
-                       if (quitMsg.exec() == QMessageBox::Ok)
-                           return;
+                       windowMessage(file,"Rename failed", "Could not rename file: %1\n%2");
+                       return;
                    }
            }
       }
