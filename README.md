@@ -50,10 +50,13 @@ After that a file system window will appear.
 
 ## GUI
 
-Initial view of filesystem
+Initial view of filesystem:
+
 ![image](https://user-images.githubusercontent.com/60686300/141324280-0e50284d-0001-4776-874f-fe451fea46a1.png)
 
+
 Commands that are now supported:
+
 ![image](https://user-images.githubusercontent.com/60686300/141324618-b8e381b4-86a0-46cc-8fef-d0d11ad3b80d.png)
 
 
