@@ -27,6 +27,7 @@ private slots:
     void copyItemTo(QString copyToPath=QString());
     void openFile();
     void renameItem();
+    void runProgram();
     void windowMessage(QFile& file,const char *name, const char *text);
 
 private:
@@ -37,6 +38,7 @@ private:
     QAction* insertAction;
     QAction* openAction;
     QAction* renameAction;
+    QAction* runAction;
     QModelIndex fileFolderIndex;
     QMenu* contextMenu;
     bool clickedTreeViewFirst;

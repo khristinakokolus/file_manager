@@ -9,6 +9,8 @@
 #include <QTextEdit>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QDesktopServices>
+#include <QProcess>
 
 FileSystem::FileSystem(QWidget *parent)
     : QMainWindow(parent)
@@ -50,11 +52,15 @@ FileSystem::FileSystem(QWidget *parent)
     renameAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
     connect(renameAction, SIGNAL(triggered()), this, SLOT(renameItem()));
 
+    auto runAction = new QAction("Run", this);
+    runAction->setShortcut(QKeySequence(Qt::Key_Enter));
+    connect(runAction, SIGNAL(triggered()), this, SLOT(runProgram()));
+
     ui->treeView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->treeView->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction });
+    ui->treeView->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction, runAction });
 
     ui->treeView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->treeView_2->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction });
+    ui->treeView_2->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction, runAction });
 }
 
 
@@ -241,17 +247,11 @@ void FileSystem::openFile() {
     QFileInfo fileInfo = fileSysModel->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();;
     QFile file(absPath);
-
-    bool opened = file.open(QFile::ReadOnly | QFile::Text);
+    bool opened = QDesktopServices::openUrl(QUrl::fromLocalFile(absPath));
         if ( !opened ) {
-            windowMessage(file, "Open failed", "Could not open file for reading: %1\n%2");
+            windowMessage(file, "Open failed", "Could not open file: %1\n%2");
             return;
         }
-
-        QTextEdit *txt = new QTextEdit();
-        QTextStream ReadFile(&file);
-        txt->setText(ReadFile.readAll());
-        txt->show();
 }
 
 void FileSystem::renameItem() {
@@ -291,6 +291,18 @@ void FileSystem::renameItem() {
            }
       }
 }
+
+
+
+void FileSystem::runProgram() {
+    QModelIndex index = getIndex();
+    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+
+    QString absPath = fileInfo.absoluteFilePath();
+    QProcess::startDetached(absPath);
+
+}
+
 
 void FileSystem::clickedFirst(const QModelIndex &index) {
     clickedTreeViewFirst = true;
