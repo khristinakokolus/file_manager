@@ -1,5 +1,5 @@
-#include "filesystem.h"
-#include "ui_filesystem.h"
+#include "filemanager.h"
+#include "ui_filemanager.h"
 
 #include <QTreeView>
 #include <QMenu>
@@ -12,25 +12,28 @@
 #include <QDesktopServices>
 #include <QProcess>
 
-FileSystem::FileSystem(QWidget *parent)
+FileManager::FileManager(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::FileSystem)
+    , ui(new Ui::FileManager)
 {
     ui->setupUi(this);
 
     QString sysPath = "";
-    fileSysModel = new QFileSystemModel(this);
-    fileSysModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files );
-    fileSysModel->setRootPath(sysPath);
+    fileManager = new QFileSystemModel(this);
+    fileManager->setFilter(QDir::AllEntries);
+    fileManager->setRootPath(sysPath);
 
     clickedTreeViewFirst = false;
     clickedTreeViewSecond = false;
 
-    ui->treeView->setModel(fileSysModel);
-    ui->treeView_2->setModel(fileSysModel);
+    ui->tableView->setModel(fileManager);
+    ui->tableView_2->setModel(fileManager);
 
-    connect(ui->treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedFirst(QModelIndex)));
-    connect(ui->treeView_2, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedSecond(QModelIndex)));
+    connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_tableView_doubleClicked(QModelIndex)));
+    connect(ui->tableView_2, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_tableView_2_doubleClicked(QModelIndex)));
+
+    connect(ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedFirst(QModelIndex)));
+    connect(ui->tableView_2, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedSecond(QModelIndex)));
 
     auto deleteAction = new QAction("Delete", this);
     deleteAction->setShortcut(QKeySequence(Qt::Key_Delete));
@@ -56,16 +59,16 @@ FileSystem::FileSystem(QWidget *parent)
     runAction->setShortcut(QKeySequence(Qt::Key_Enter));
     connect(runAction, SIGNAL(triggered()), this, SLOT(runProgram()));
 
-    ui->treeView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->treeView->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction, runAction });
+    ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ui->tableView->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction, runAction });
 
-    ui->treeView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->treeView_2->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction, runAction });
+    ui->tableView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ui->tableView_2->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction, runAction });
 }
 
 
 
-void FileSystem::windowMessage(QFile& file, const char *name, const char *text){
+void FileManager::windowMessage(QFile& file, const char *name, const char *text){
     QMessageBox::critical(
         this,
         tr(name),
@@ -75,9 +78,9 @@ void FileSystem::windowMessage(QFile& file, const char *name, const char *text){
 }
 
 
-void FileSystem::deleteItem() {
+void FileManager::deleteItem() {
     QMessageBox quitMsg;
-    quitMsg.setWindowTitle("FileSystem");
+    quitMsg.setWindowTitle("FileManager");
     quitMsg.setText("Do you really want to delete?");
     quitMsg.setStandardButtons(QMessageBox::Yes |
     QMessageBox::Cancel);
@@ -87,15 +90,15 @@ void FileSystem::deleteItem() {
 
 }
 
-QModelIndex FileSystem::getIndex() {
+QModelIndex FileManager::getIndex() {
     QModelIndex index;
 
     if (clickedTreeViewFirst == true) {
-        index = ui->treeView->currentIndex();
+        index = ui->tableView->currentIndex();
         clickedTreeViewFirst = false;
     }
     else if (clickedTreeViewSecond == true) {
-        index = ui->treeView_2->currentIndex();
+        index = ui->tableView_2->currentIndex();
         clickedTreeViewSecond = false;
     }
     return index;
@@ -103,10 +106,10 @@ QModelIndex FileSystem::getIndex() {
 }
 
 
-void FileSystem::deletion() {
+void FileManager::deletion() {
     QModelIndex index = getIndex();
 
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QFileInfo fileInfo = fileManager->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();
 
 
@@ -136,10 +139,10 @@ void FileSystem::deletion() {
 }
 
 
-void FileSystem::copyItemFrom(QString copyFromPath) {
+void FileManager::copyItemFrom(QString copyFromPath) {
     QModelIndex index = getIndex();
 
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QFileInfo fileInfo = fileManager->fileInfo(index);
 
     QString absPath = fileInfo.absoluteFilePath();
     fileNameToCopy = QString();
@@ -165,10 +168,10 @@ void FileSystem::copyItemFrom(QString copyFromPath) {
 }
 
 
-void FileSystem::copyItemTo(QString copyToPath) {
+void FileManager::copyItemTo(QString copyToPath) {
     QModelIndex index = getIndex();
 
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QFileInfo fileInfo = fileManager->fileInfo(index);
 
     QString absPath = fileInfo.absoluteFilePath();
     if(!fileNameToCopy.isNull()) {
@@ -229,22 +232,22 @@ void FileSystem::copyItemTo(QString copyToPath) {
 
         for(int i = 0; i< files.count(); i++) {
             map.remove(dirName+"/"+files[i]);
-            FileSystem::copyItemFrom(copyFrom + "/" + files[i]);
-            FileSystem::copyItemTo(copyTo + "/" + dirName);
+            FileManager::copyItemFrom(copyFrom + "/" + files[i]);
+            FileManager::copyItemTo(copyTo + "/" + dirName);
         }
         if(!(map.isEmpty())) {
             QString from = map.first().first;
             QString to = map.first().second;
-            FileSystem::copyItemFrom(from + "/" + map.firstKey().split('/')[1]);
+            FileManager::copyItemFrom(from + "/" + map.firstKey().split('/')[1]);
             map.remove(map.firstKey());
-            FileSystem::copyItemTo(to + "/" + dirName);
+            FileManager::copyItemTo(to + "/" + dirName);
         }
     }
 
-void FileSystem::openFile() {
+void FileManager::openFile() {
     QModelIndex index = getIndex();
 
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QFileInfo fileInfo = fileManager->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();;
     QFile file(absPath);
     bool opened = QDesktopServices::openUrl(QUrl::fromLocalFile(absPath));
@@ -254,10 +257,10 @@ void FileSystem::openFile() {
         }
 }
 
-void FileSystem::renameItem() {
+void FileManager::renameItem() {
     QModelIndex index = getIndex();
 
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QFileInfo fileInfo = fileManager->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();
 
     bool ok;
@@ -294,9 +297,9 @@ void FileSystem::renameItem() {
 
 
 
-void FileSystem::runProgram() {
+void FileManager::runProgram() {
     QModelIndex index = getIndex();
-    QFileInfo fileInfo = fileSysModel->fileInfo(index);
+    QFileInfo fileInfo = fileManager->fileInfo(index);
 
     QString absPath = fileInfo.absoluteFilePath();
     QProcess::startDetached(absPath);
@@ -304,17 +307,53 @@ void FileSystem::runProgram() {
 }
 
 
-void FileSystem::clickedFirst(const QModelIndex &index) {
+void FileManager::clickedFirst(const QModelIndex &index) {
     clickedTreeViewFirst = true;
 }
 
 
-void FileSystem::clickedSecond(const QModelIndex &index) {
+void FileManager::clickedSecond(const QModelIndex &index) {
     clickedTreeViewSecond = true;
 }
 
 
-FileSystem::~FileSystem()
+FileManager::~FileManager()
 {
     delete ui;
 }
+
+
+void FileManager::on_tableView_doubleClicked(const QModelIndex &index)
+{
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    if (fileInfo.fileName() == "..") {
+       QDir directory = fileInfo.dir();
+       directory.cdUp();
+       ui->tableView->setRootIndex(fileManager->index(directory.absolutePath()));
+    }
+    else if (fileInfo.fileName() == ".") {
+        ui->tableView->setRootIndex(fileManager->index(""));
+    }
+    else if (fileInfo.isDir()) {
+        ui->tableView->setRootIndex(index);
+    }
+
+}
+
+
+void FileManager::on_tableView_2_doubleClicked(const QModelIndex &index)
+{
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    if (fileInfo.fileName() == "..") {
+       QDir directory = fileInfo.dir();
+       directory.cdUp();
+       ui->tableView_2->setRootIndex(fileManager->index(directory.absolutePath()));
+    }
+    else if (fileInfo.fileName() == ".") {
+        ui->tableView_2->setRootIndex(fileManager->index(""));
+    }
+    else if (fileInfo.isDir()) {
+        ui->tableView_2->setRootIndex(index);
+    }
+}
+

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>FileSystem</class>
- <widget class="QMainWindow" name="FileSystem">
+ <class>FileManager</class>
+ <widget class="QMainWindow" name="FileManager">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>901</width>
-    <height>604</height>
+    <width>800</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>FileSystem</string>
+   <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QTreeView" name="treeView_2"/>
+     <widget class="QTableView" name="tableView_2"/>
     </item>
     <item>
-     <widget class="QTreeView" name="treeView"/>
+     <widget class="QTableView" name="tableView"/>
     </item>
    </layout>
   </widget>

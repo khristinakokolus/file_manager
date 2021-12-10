@@ -1,23 +1,23 @@
-#ifndef FILESYSTEM_H
-#define FILESYSTEM_H
+#ifndef FILEMANAGER_H
+#define FILEMANAGER_H
 
 #include <QMainWindow>
 #include <QShortcut>
 #include <QFileSystemModel>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class FileSystem; }
+namespace Ui { class FileManager; }
 QT_END_NAMESPACE
 
-class FileSystem : public QMainWindow
+class FileManager : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit FileSystem(QWidget *parent = nullptr);
+    explicit FileManager(QWidget *parent = nullptr);
     QModelIndex getIndex();
     void deletion();
-    ~FileSystem();
+    ~FileManager();
 
 private slots:
     void clickedFirst(const QModelIndex &index);
@@ -30,9 +30,13 @@ private slots:
     void runProgram();
     void windowMessage(QFile& file,const char *name, const char *text);
 
+    void on_tableView_doubleClicked(const QModelIndex &index);
+
+    void on_tableView_2_doubleClicked(const QModelIndex &index);
+
 private:
-    Ui::FileSystem *ui;
-    QFileSystemModel *fileSysModel;
+    Ui::FileManager *ui;
+    QFileSystemModel *fileManager;
     QAction* deleteAction;
     QAction* copyAction;
     QAction* insertAction;
@@ -56,4 +60,5 @@ private:
 
 //extern QString copyFrom;
 
-#endif // FILESYSTEM_H
+#endif // FILEMANAGER_H
+
