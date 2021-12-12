@@ -11,12 +11,15 @@
 #include <QInputDialog>
 #include <QDesktopServices>
 #include <QProcess>
+#include <QProgressDialog>
+#include <QMimeDatabase>
 
 FileManager::FileManager(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::FileManager)
 {
     ui->setupUi(this);
+    this->setWindowTitle("File manager");
 
     QString sysPath = "";
     fileManager = new QFileSystemModel(this);
@@ -43,6 +46,14 @@ FileManager::FileManager(QWidget *parent)
     copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
     connect(copyAction, SIGNAL(triggered()), this, SLOT(copyItemFrom()));
 
+    auto createDirectoryAction = new QAction("Create directory", this);
+//    createFolderAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+    connect(createDirectoryAction, SIGNAL(triggered()), this, SLOT(createDirectory()));
+
+    auto createFileAction = new QAction("Create file", this);
+//    createFileAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+    connect(createFileAction, SIGNAL(triggered()), this, SLOT(createFile()));
+
     auto insertAction = new QAction("Insert", this);
     insertAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_V));
     connect(insertAction, SIGNAL(triggered()), this, SLOT(copyItemTo()));
@@ -59,11 +70,17 @@ FileManager::FileManager(QWidget *parent)
     runAction->setShortcut(QKeySequence(Qt::Key_Enter));
     connect(runAction, SIGNAL(triggered()), this, SLOT(runProgram()));
 
+    auto searchAction = new QAction("Search", this);
+    searchAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F));
+    connect(searchAction, SIGNAL(triggered()), this, SLOT(searchFiles()));
+
     ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->tableView->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction, runAction });
+    ui->tableView->addActions({ openAction, copyAction, createDirectoryAction, createFileAction,
+                                insertAction, deleteAction, renameAction, runAction, searchAction });
 
     ui->tableView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->tableView_2->addActions({ openAction, copyAction, insertAction, deleteAction, renameAction, runAction });
+    ui->tableView_2->addActions({ openAction, copyAction, createDirectoryAction, createFileAction,
+                                  insertAction, deleteAction, renameAction, runAction, searchAction });
 }
 
 
@@ -304,6 +321,95 @@ void FileManager::runProgram() {
     QString absPath = fileInfo.absoluteFilePath();
     QProcess::startDetached(absPath);
 
+}
+
+void FileManager::searchFiles() {
+    QModelIndex index = getIndex();
+
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();
+    QString path = QDir::cleanPath(absPath);
+
+    bool ok;
+    QString fileToFind = QInputDialog::getText(0, "Finding files",
+                                         "File to find:", QLineEdit::Normal,
+                                         "", &ok);
+    QStringList filter;
+    if (!fileToFind.isEmpty())
+        filter << fileToFind;
+    QDirIterator it(path, QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    QStringList files;
+    while (it.hasNext())
+        files << it.next();
+    files = findFiles(files, fileToFind);
+    files.sort();
+
+
+    QString found = "Found files containing in the name " "'"  + fileToFind + "': " + "\n";
+    for (auto &file : files) {
+        found += file + "\n";
+    }
+
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Found files");
+    msgBox.setText(found);
+    msgBox.exec();
+}
+
+QStringList FileManager::findFiles(const QStringList &files, const QString &text) {
+    QProgressDialog progressDialog(this);
+    progressDialog.setCancelButtonText(tr("&Cancel"));
+    progressDialog.setRange(0, files.size());
+    progressDialog.setWindowTitle(tr("Find Files"));
+
+
+    QStringList foundFiles;
+    qInfo() << files.size();
+    for (int i = 0; i < files.size(); ++i) {
+        progressDialog.setValue(i);
+        progressDialog.setLabelText(tr("Searching file number %1 of %n...", nullptr, files.size()).arg(i));
+        QCoreApplication::processEvents();
+        const QString fileName = files.at(i);
+        QFile file(fileName);
+        if (fileName.contains(text, Qt::CaseInsensitive)) {
+            foundFiles << files[i];
+        }
+        if (progressDialog.wasCanceled())
+            break;
+    }
+    qInfo() << foundFiles;
+    return foundFiles;
+
+}
+
+void FileManager::createDirectory() {
+    QModelIndex index = getIndex();
+
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();
+    bool ok;
+    QString dirName = QInputDialog::getText(0, "Creating new directory",
+                                            "New directory name:", QLineEdit::Normal,
+                                            "", &ok);
+    QDir dir(absPath);
+    dir.mkdir(dirName);
+}
+
+void FileManager::createFile() {
+    QModelIndex index = getIndex();
+
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();
+
+    qInfo() << absPath;
+
+    bool ok;
+    QString fileName = QInputDialog::getText(0, "Creating new file",
+                                            "New file name:", QLineEdit::Normal,
+                                            "", &ok);
+    QFile file(absPath + fileName);
+    file.open(QIODevice::WriteOnly);
 }
 
 

@@ -16,6 +16,7 @@ class FileManager : public QMainWindow
 public:
     explicit FileManager(QWidget *parent = nullptr);
     QModelIndex getIndex();
+    QStringList findFiles(const QStringList &files, const QString &text);
     void deletion();
     ~FileManager();
 
@@ -28,6 +29,9 @@ private slots:
     void openFile();
     void renameItem();
     void runProgram();
+    void searchFiles();
+    void createDirectory();
+    void createFile();
     void windowMessage(QFile& file,const char *name, const char *text);
 
     void on_tableView_doubleClicked(const QModelIndex &index);
@@ -57,8 +61,6 @@ private:
     QMap<QString, QPair<QString, QString>> map;
 
 };
-
-//extern QString copyFrom;
 
 #endif // FILEMANAGER_H
 
