@@ -14,6 +14,10 @@
 #include <QProgressDialog>
 #include <QMimeDatabase>
 
+
+#include <QMutex>
+
+#include <QTextEdit>
 FileManager::FileManager(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::FileManager)
@@ -62,6 +66,10 @@ FileManager::FileManager(QWidget *parent)
     openAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
     connect(openAction, SIGNAL(triggered()), this, SLOT(openFile()));
 
+    auto openHexAction = new QAction("Open in hex", this);
+    openHexAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_H));
+    connect(openHexAction, SIGNAL(triggered()), this, SLOT(openHexFile()));
+
     auto renameAction = new QAction("Rename", this);
     renameAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
     connect(renameAction, SIGNAL(triggered()), this, SLOT(renameItem()));
@@ -75,11 +83,11 @@ FileManager::FileManager(QWidget *parent)
     connect(searchAction, SIGNAL(triggered()), this, SLOT(searchFiles()));
 
     ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->tableView->addActions({ openAction, copyAction, createDirectoryAction, createFileAction,
+    ui->tableView->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
                                 insertAction, deleteAction, renameAction, runAction, searchAction });
 
     ui->tableView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->tableView_2->addActions({ openAction, copyAction, createDirectoryAction, createFileAction,
+    ui->tableView_2->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
                                   insertAction, deleteAction, renameAction, runAction, searchAction });
 }
 
@@ -273,6 +281,105 @@ void FileManager::openFile() {
             return;
         }
 }
+
+
+
+//void FileManager::openHexFile() {
+
+//    QModelIndex index = getIndex();
+//    QFileInfo fileInfo = fileManager->fileInfo(index);
+//    QString absPath = fileInfo.absoluteFilePath();;
+//    QFile file(absPath);
+//    if (!file.open(QIODevice::ReadWrite))
+//    {
+//        windowMessage(file, "Open failed", "Could not open file: %1\n%2");
+//        return;
+//      return;
+//    }
+//    else
+//    {
+//        QTextEdit *txt = new QTextEdit();
+//        while(!file.atEnd()){
+//        QByteArray hex = file.read(1).toHex();
+//        txt->moveCursor((QTextCursor::End));
+//        txt->insertPlainText(hex+' ');
+
+//        }
+//        txt->show();
+//      }
+
+// }
+
+
+void FileManager::openHexFile() {
+    QMutex m_dataMtx;
+
+    QModelIndex index = getIndex();
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();;
+    QFile file(absPath);
+    if (!file.open(QIODevice::ReadWrite))
+        {
+            windowMessage(file, "Open failed", "Could not open file: %1\n%2");
+          return;
+        }
+    int bytes_per_line = 16;
+
+//    QMutexLocker lock(&m_dataMtx);
+    QByteArray arr = file.readAll();
+    int last_idx = arr.size() / bytes_per_line;
+
+    QTextEdit *textEdit = new QTextEdit();
+//    setFont(QFont("Courier", 10));
+    for (int line_idx = 0;  line_idx <= last_idx; line_idx += 1){
+        QString address = QString("%1").arg(line_idx * bytes_per_line, 10, 16, QChar('0'));
+
+        textEdit->moveCursor((QTextCursor::End));
+        textEdit->insertPlainText(address+"\t|\t");
+        int blength = 0;
+        for(int i=0; i< bytes_per_line && (line_idx * bytes_per_line + i) < arr.size(); i++){
+            QString val = QString::number((arr.at(line_idx * bytes_per_line + i) & 0xF0) >> 4, 16);
+            textEdit->moveCursor((QTextCursor::End));
+            textEdit->insertPlainText(val);
+
+            val = QString::number((arr.at(line_idx * bytes_per_line + i) & 0xF), 16);
+            textEdit->moveCursor((QTextCursor::End));
+            textEdit->insertPlainText(val+' ');
+            blength = i;
+        }
+        if (blength != bytes_per_line){
+            for (int i = 0; i <= bytes_per_line - blength; i++){
+                textEdit->moveCursor((QTextCursor::End));
+                textEdit->insertPlainText("     ");
+            }
+
+        }
+        textEdit->moveCursor((QTextCursor::End));
+        textEdit->insertPlainText("\t|\t");
+        for (int i=0; (line_idx * bytes_per_line + i) < arr.size() && (i < bytes_per_line); i++)
+        {
+            char ch = arr[line_idx * bytes_per_line + i];
+            if ((ch < 0x20) || (ch > 0x7e))
+            ch = '.';
+            textEdit->moveCursor((QTextCursor::End));
+            textEdit->insertPlainText(QString(ch)+' ');
+        }
+        textEdit->append("\n");
+
+
+
+    }
+    textEdit->show();
+
+
+
+
+
+
+ }
+
+
+
 
 void FileManager::renameItem() {
     QModelIndex index = getIndex();

@@ -27,6 +27,7 @@ private slots:
     void copyItemFrom(QString copyFromPath=QString());
     void copyItemTo(QString copyToPath=QString());
     void openFile();
+    void openHexFile();
     void renameItem();
     void runProgram();
     void searchFiles();
@@ -45,6 +46,7 @@ private:
     QAction* copyAction;
     QAction* insertAction;
     QAction* openAction;
+    QAction* openHexAction;
     QAction* renameAction;
     QAction* runAction;
     QModelIndex fileFolderIndex;
