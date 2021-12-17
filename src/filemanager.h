@@ -33,6 +33,7 @@ private slots:
     void searchFiles();
     void createDirectory();
     void createFile();
+    void help(QAction *action);
     void windowMessage(QFile& file,const char *name, const char *text);
 
     void on_tableView_doubleClicked(const QModelIndex &index);

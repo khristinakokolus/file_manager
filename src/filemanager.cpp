@@ -42,6 +42,19 @@ FileManager::FileManager(QWidget *parent)
     connect(ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedFirst(QModelIndex)));
     connect(ui->tableView_2, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedSecond(QModelIndex)));
 
+
+
+    QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
+    QMenu *findFilesMenu = menuBar()->addMenu(tr("Find Files"));
+    helpMenu->addAction(tr("How to use quide"));
+    findFilesMenu->addAction(tr("Find"));
+
+
+    connect(helpMenu, SIGNAL(triggered(QAction*))
+            , SLOT(help(QAction*)));
+    connect(findFilesMenu, SIGNAL(triggered(QAction*))
+            , SLOT(searchFiles()));
+
     auto deleteAction = new QAction("Delete", this);
     deleteAction->setShortcut(QKeySequence(Qt::Key_Delete));
     connect(deleteAction, SIGNAL(triggered()), this, SLOT(deleteItem()));
@@ -51,11 +64,11 @@ FileManager::FileManager(QWidget *parent)
     connect(copyAction, SIGNAL(triggered()), this, SLOT(copyItemFrom()));
 
     auto createDirectoryAction = new QAction("Create directory", this);
-//    createFolderAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+    createDirectoryAction->setShortcut(QKeySequence(Qt::Key_D));
     connect(createDirectoryAction, SIGNAL(triggered()), this, SLOT(createDirectory()));
 
     auto createFileAction = new QAction("Create file", this);
-//    createFileAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+    createFileAction->setShortcut(QKeySequence(Qt::Key_F));
     connect(createFileAction, SIGNAL(triggered()), this, SLOT(createFile()));
 
     auto insertAction = new QAction("Insert", this);
@@ -89,6 +102,25 @@ FileManager::FileManager(QWidget *parent)
     ui->tableView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView_2->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
                                   insertAction, deleteAction, renameAction, runAction, searchAction });
+}
+
+
+void FileManager::help(QAction *action){
+    QString documentationText = "Welcome to a simple File Manager!\n\n\n Here is a small quide how to use it. All actions that can be performed using right mouse button:\n\n\n"
+                                "1. Delete - delete the file or directory. Shortcut - Delete\n\n"
+                                "2. Copy - copy file or directory. Shortcut - CTRL+C\n\n"
+                                "3. Create directory - create new directory. Shortcut - D\n\n"
+                                "4. Create file - create new file. Shortcut - F\n\n"
+                                "5. Insert - insert copied file to the certain directory. Shortcut - CTRL+V\n\n"
+                                "6. Open - open file text file in text editor. Shortcut - CTRL+O\n\n"
+                                "7. Open in hex - open file as hex representation. Shortcut - CTRL+H\n\n"
+                                "8. Rename - rename file or directory. Shortcut - CTRL+R\n\n"
+                                "9. Run - run the program. Shortcut - Enter\n\n"
+                                "10. Search - search for files in a certain directory and its subdirectories. Shortcut - CTRL+F\n\n";
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Usage guide");
+    msgBox.setText(documentationText);
+    msgBox.exec();
 }
 
 
@@ -371,11 +403,6 @@ void FileManager::openHexFile() {
     }
     textEdit->show();
 
-
-
-
-
-
  }
 
 
@@ -431,16 +458,15 @@ void FileManager::runProgram() {
 }
 
 void FileManager::searchFiles() {
-    QModelIndex index = getIndex();
-
-    QFileInfo fileInfo = fileManager->fileInfo(index);
-    QString absPath = fileInfo.absoluteFilePath();
-    QString path = QDir::cleanPath(absPath);
-
     bool ok;
+
+    QString path = QInputDialog::getText(0, "Directory to search in",
+                                         "Directory:", QLineEdit::Normal,
+                                         "", &ok);
     QString fileToFind = QInputDialog::getText(0, "Finding files",
                                          "File to find:", QLineEdit::Normal,
                                          "", &ok);
+    qInfo() << path;
     QStringList filter;
     if (!fileToFind.isEmpty())
         filter << fileToFind;
@@ -451,10 +477,16 @@ void FileManager::searchFiles() {
     files = findFiles(files, fileToFind);
     files.sort();
 
+    QString found;
 
-    QString found = "Found files containing in the name " "'"  + fileToFind + "': " + "\n";
-    for (auto &file : files) {
-        found += file + "\n";
+    if (files.empty()) {
+        found = "There are no files containing in the name " "'"  + fileToFind + "'     ";
+    }
+    else {
+        found = "Found files containing in the name " "'"  + fileToFind + "': " + "\n";
+        for (auto &file : files) {
+            found += file + "\n";
+        }
     }
 
 
