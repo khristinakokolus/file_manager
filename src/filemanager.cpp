@@ -46,14 +46,23 @@ FileManager::FileManager(QWidget *parent)
 
     QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
     QMenu *findFilesMenu = menuBar()->addMenu(tr("Find Files"));
+    QMenu *createDirectoryMenu = menuBar()->addMenu(tr("Create directory"));
+    QMenu *createFileMenu = menuBar()->addMenu(tr("Create file"));
     helpMenu->addAction(tr("How to use quide"));
     findFilesMenu->addAction(tr("Find"));
+    createDirectoryMenu->addAction(tr("Create"));
+    createFileMenu->addAction(tr("Create"));
 
 
     connect(helpMenu, SIGNAL(triggered(QAction*))
-            , SLOT(help(QAction*)));
+            , SLOT(help()));
     connect(findFilesMenu, SIGNAL(triggered(QAction*))
             , SLOT(searchFiles()));
+    connect(createDirectoryMenu, SIGNAL(triggered(QAction*))
+            , SLOT(createDirectory()));
+    connect(createFileMenu, SIGNAL(triggered(QAction*))
+            , SLOT(createFile()));
+
 
     auto deleteAction = new QAction("Delete", this);
     deleteAction->setShortcut(QKeySequence(Qt::Key_Delete));
@@ -105,7 +114,7 @@ FileManager::FileManager(QWidget *parent)
 }
 
 
-void FileManager::help(QAction *action){
+void FileManager::help(){
     QString documentationText = "Welcome to a simple File Manager!\n\n\n Here is a small quide how to use it. All actions that can be performed using right mouse button:\n\n\n"
                                 "1. Delete - delete the file or directory. Shortcut - Delete\n\n"
                                 "2. Copy - copy file or directory. Shortcut - CTRL+C\n\n"
@@ -120,6 +129,7 @@ void FileManager::help(QAction *action){
     QMessageBox msgBox;
     msgBox.setWindowTitle("Usage guide");
     msgBox.setText(documentationText);
+    msgBox.setTextInteractionFlags(Qt::TextSelectableByMouse);
     msgBox.exec();
 }
 
@@ -312,35 +322,11 @@ void FileManager::openFile() {
             windowMessage(file, "Open failed", "Could not open file: %1\n%2");
             return;
         }
+    bool ok;
+    QString fileToFind = QInputDialog::getText(0, "Finding files",
+                                         "File to find:", QLineEdit::Normal,
+                                         "", &ok);
 }
-
-
-
-//void FileManager::openHexFile() {
-
-//    QModelIndex index = getIndex();
-//    QFileInfo fileInfo = fileManager->fileInfo(index);
-//    QString absPath = fileInfo.absoluteFilePath();;
-//    QFile file(absPath);
-//    if (!file.open(QIODevice::ReadWrite))
-//    {
-//        windowMessage(file, "Open failed", "Could not open file: %1\n%2");
-//        return;
-//      return;
-//    }
-//    else
-//    {
-//        QTextEdit *txt = new QTextEdit();
-//        while(!file.atEnd()){
-//        QByteArray hex = file.read(1).toHex();
-//        txt->moveCursor((QTextCursor::End));
-//        txt->insertPlainText(hex+' ');
-
-//        }
-//        txt->show();
-//      }
-
-// }
 
 
 void FileManager::openHexFile() {
@@ -466,7 +452,6 @@ void FileManager::searchFiles() {
     QString fileToFind = QInputDialog::getText(0, "Finding files",
                                          "File to find:", QLineEdit::Normal,
                                          "", &ok);
-    qInfo() << path;
     QStringList filter;
     if (!fileToFind.isEmpty())
         filter << fileToFind;
@@ -489,11 +474,29 @@ void FileManager::searchFiles() {
         }
     }
 
-
     QMessageBox msgBox;
     msgBox.setWindowTitle("Found files");
     msgBox.setText(found);
-    msgBox.exec();
+    msgBox.addButton(QMessageBox::Open);
+    msgBox.setTextInteractionFlags(Qt::TextSelectableByMouse);
+    msgBox.setStandardButtons(QMessageBox::Open |
+    QMessageBox::Ok);
+    if (msgBox.exec() == QMessageBox::Open)
+        openFileByPath();
+}
+
+
+void FileManager::openFileByPath() {
+    bool ok;
+    QString fileToOpen = QInputDialog::getText(0, "File opening",
+                                         "File to open:", QLineEdit::Normal,
+                                         "", &ok);
+    QFile file(fileToOpen);
+    bool opened = QDesktopServices::openUrl(QUrl::fromLocalFile(fileToOpen));
+        if ( !opened ) {
+            windowMessage(file, "Open failed", "Could not open file: %1\n%2");
+            return;
+        }
 }
 
 QStringList FileManager::findFiles(const QStringList &files, const QString &text) {
@@ -517,17 +520,17 @@ QStringList FileManager::findFiles(const QStringList &files, const QString &text
         if (progressDialog.wasCanceled())
             break;
     }
-    qInfo() << foundFiles;
     return foundFiles;
 
 }
 
 void FileManager::createDirectory() {
-    QModelIndex index = getIndex();
-
-    QFileInfo fileInfo = fileManager->fileInfo(index);
-    QString absPath = fileInfo.absoluteFilePath();
     bool ok;
+
+    QString absPath = QInputDialog::getText(0, "Directory whaere to create new directory",
+                                         "Directory name:", QLineEdit::Normal,
+                                         "", &ok);
+
     QString dirName = QInputDialog::getText(0, "Creating new directory",
                                             "New directory name:", QLineEdit::Normal,
                                             "", &ok);
@@ -536,14 +539,10 @@ void FileManager::createDirectory() {
 }
 
 void FileManager::createFile() {
-    QModelIndex index = getIndex();
-
-    QFileInfo fileInfo = fileManager->fileInfo(index);
-    QString absPath = fileInfo.absoluteFilePath();
-
-    qInfo() << absPath;
-
     bool ok;
+    QString absPath = QInputDialog::getText(0, "Directory where to create new file",
+                                         "Directory name:", QLineEdit::Normal,
+                                         "", &ok);
     QString fileName = QInputDialog::getText(0, "Creating new file",
                                             "New file name:", QLineEdit::Normal,
                                             "", &ok);
