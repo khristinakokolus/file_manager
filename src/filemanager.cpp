@@ -1,4 +1,4 @@
-#include "filemanager.h"
+#include "../inc/filemanager.h"
 #include "ui_filemanager.h"
 
 #include <QTreeView>
@@ -97,7 +97,7 @@ FileManager::FileManager(QWidget *parent)
     connect(renameAction, SIGNAL(triggered()), this, SLOT(renameItem()));
 
     auto runAction = new QAction("Run", this);
-    runAction->setShortcut(QKeySequence(Qt::Key_Enter));
+    runAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
     connect(runAction, SIGNAL(triggered()), this, SLOT(runProgram()));
 
     auto searchAction = new QAction("Search", this);
@@ -322,10 +322,6 @@ void FileManager::openFile() {
             windowMessage(file, "Open failed", "Could not open file: %1\n%2");
             return;
         }
-    bool ok;
-    QString fileToFind = QInputDialog::getText(0, "Finding files",
-                                         "File to find:", QLineEdit::Normal,
-                                         "", &ok);
 }
 
 
