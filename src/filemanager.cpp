@@ -114,14 +114,20 @@ FileManager::FileManager(QWidget *parent)
     copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
     connect(archiveFileAction, SIGNAL(triggered()), this, SLOT(archiveFile()));
 
+    auto listArchiveAction = new QAction("List archive entries", this);
+    copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
+    connect(listArchiveAction, SIGNAL(triggered()), this, SLOT(listArchive()));
+
+
+
 
     ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
-                                insertAction, deleteAction, renameAction, runAction, searchAction, archiveFileAction});
+                                insertAction, deleteAction, renameAction, runAction, searchAction, archiveFileAction, listArchiveAction});
 
     ui->tableView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView_2->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
-                                  insertAction, deleteAction, renameAction, runAction, searchAction, archiveFileAction });
+                                  insertAction, deleteAction, renameAction, runAction, searchAction, archiveFileAction, listArchiveAction });
 }
 
 
@@ -573,20 +579,6 @@ void FileManager::archiveFile() {
     write_archive(path);
 }
 
-class listview : QDialog
-{
-public:
-    listview(const QStringList &leaders, QWidget *parent);
-    void insert();
-    void del();
-    QStringList leaders() const;
-
-private:
-    QListView *listView;
-    QStringListModel *model;
-
-
-};
 
 void FileManager::listArchive() {
     QModelIndex index = getIndex();
