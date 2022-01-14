@@ -1,0 +1,3 @@
+"C:\Program Files\JetBrains\CLion 2020.2.3\bin\cmake\win\bin\cmake.exe" -E rm -f CMakeFiles\filemanager.dir/objects.a
+C:\msys64\mingw64\bin\ar.exe cr CMakeFiles\filemanager.dir/objects.a @CMakeFiles\filemanager.dir\objects1.rsp
+C:\msys64\mingw64\bin\g++.exe  -Wall -Wextra -g   -Wl,--whole-archive CMakeFiles\filemanager.dir/objects.a -Wl,--no-whole-archive  -o filemanager.exe -Wl,--out-implib,libfilemanager.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\filemanager.dir\linklibs.rsp

@@ -1,6 +1,6 @@
 #include "../inc/filemanager.h"
 #include "ui_filemanager.h"
-#include "archiving.h"
+#include "../inc/archiving.h"
 
 #include <QTreeView>
 #include <QMenu>
@@ -109,25 +109,27 @@ FileManager::FileManager(QWidget *parent)
     searchAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F));
     connect(searchAction, SIGNAL(triggered()), this, SLOT(searchFiles()));
 
+    auto unzipAction = new QAction("Unzip", this);
+    unzipAction->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_S));
+    connect(unzipAction, SIGNAL(triggered()), this, SLOT(unzipFiles()));
 
-    auto archiveFileAction = new QAction("Archive", this);
-    copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
-    connect(archiveFileAction, SIGNAL(triggered()), this, SLOT(archiveFile()));
+    auto zipAction = new QAction("Zip", this);
+    zipAction->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_A));
+    connect(zipAction, SIGNAL(triggered()), this, SLOT(zipFiles()));
+
 
     auto listArchiveAction = new QAction("List archive entries", this);
     copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
     connect(listArchiveAction, SIGNAL(triggered()), this, SLOT(listArchive()));
 
 
-
-
     ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
-                                insertAction, deleteAction, renameAction, runAction, searchAction, archiveFileAction, listArchiveAction});
+                                insertAction, deleteAction, renameAction, runAction, searchAction, unzipAction, zipAction, listArchiveAction});
 
     ui->tableView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView_2->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
-                                  insertAction, deleteAction, renameAction, runAction, searchAction, archiveFileAction, listArchiveAction });
+                                  insertAction, deleteAction, renameAction, runAction, searchAction, unzipAction, zipAction, listArchiveAction });
 }
 
 
@@ -568,16 +570,16 @@ void FileManager::createFile() {
 }
 
 
-void FileManager::archiveFile() {
-    QModelIndex index = getIndex();
-
-    QFileInfo fileInfo = fileManager->fileInfo(index);
-    QString absPath = fileInfo.absoluteFilePath();
-    QByteArray ba = absPath.toLocal8Bit();
-    const char *path = ba.data();
-    QFile file(absPath);
-    write_archive(path);
-}
+//void FileManager::archiveFile() {
+//    QModelIndex index = getIndex();
+//
+//    QFileInfo fileInfo = fileManager->fileInfo(index);
+//    QString absPath = fileInfo.absoluteFilePath();
+//    QByteArray ba = absPath.toLocal8Bit();
+//    const char *path = ba.data();
+//    QFile file(absPath);
+//    write_archive(path);
+//}
 
 
 void FileManager::listArchive() {
@@ -610,15 +612,31 @@ void FileManager::listArchive() {
 
 }
 
-void FileManager::extractArchive() {
+//void FileManager::extractArchive() {
+//    QModelIndex index = getIndex();
+//
+//    QFileInfo fileInfo = fileManager->fileInfo(index);
+//    QString absPath = fileInfo.absoluteFilePath();
+//    QByteArray ba = absPath.toLocal8Bit();
+//    const char *path = ba.data();
+//    QFile file(absPath);
+//    write_archive(path);
+//}
+
+void FileManager::unzipFiles() {
     QModelIndex index = getIndex();
 
     QFileInfo fileInfo = fileManager->fileInfo(index);
     QString absPath = fileInfo.absoluteFilePath();
     QByteArray ba = absPath.toLocal8Bit();
     const char *path = ba.data();
-    QFile file(absPath);
-    write_archive(path);
+    extract(path);
+//    QFile file(absPath);
+//    write_archive(path);
+}
+
+void FileManager::zipFiles() {
+
 }
 
 void FileManager::clickedFirst(const QModelIndex &index) {

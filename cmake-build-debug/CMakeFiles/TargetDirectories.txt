@@ -1,0 +1,4 @@
+D:/UCU/Third/OS/file_manager/cmake-build-debug/CMakeFiles/filemanager.dir
+D:/UCU/Third/OS/file_manager/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/UCU/Third/OS/file_manager/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+D:/UCU/Third/OS/file_manager/cmake-build-debug/CMakeFiles/filemanager_autogen.dir

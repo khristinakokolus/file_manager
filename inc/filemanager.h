@@ -35,8 +35,8 @@ private slots:
     void createDirectory();
     void createFile();
     void help();
-    void archiveFile();
-    void extractArchive();
+    void unzipFiles();
+    void zipFiles();
     void listArchive();
     void windowMessage(QFile& file,const char *name, const char *text);
 

@@ -1,0 +1,88 @@
+{
+	"BUILD_DIR" : "D:/UCU/Third/OS/file_manager/cmake-build-debug/filemanager_autogen",
+	"CMAKE_BINARY_DIR" : "D:/UCU/Third/OS/file_manager/cmake-build-debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "D:/UCU/Third/OS/file_manager/cmake-build-debug",
+	"CMAKE_CURRENT_SOURCE_DIR" : "D:/UCU/Third/OS/file_manager",
+	"CMAKE_EXECUTABLE" : "C:/Program Files/JetBrains/CLion 2020.2.3/bin/cmake/win/bin/cmake.exe",
+	"CMAKE_SOURCE_DIR" : "D:/UCU/Third/OS/file_manager",
+	"DEP_FILE" : "",
+	"DEP_FILE_RULE_NAME" : "",
+	"HEADERS" : 
+	[
+		[
+			"D:/UCU/Third/OS/file_manager/inc/archiving.h",
+			"MU",
+			"DIG64O274K/moc_archiving.cpp"
+		],
+		[
+			"D:/UCU/Third/OS/file_manager/inc/filemanager.h",
+			"MU",
+			"DIG64O274K/moc_filemanager.cpp"
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "D:/UCU/Third/OS/file_manager/cmake-build-debug/filemanager_autogen/include",
+	"MOC_COMPILATION_FILE" : "D:/UCU/Third/OS/file_manager/cmake-build-debug/filemanager_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : 
+	[
+		"BOOST_ERROR_CODE_HEADER_ONLY",
+		"QT_CORE_LIB",
+		"QT_GUI_LIB",
+		"QT_WIDGETS_LIB"
+	],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"D:/UCU/Third/OS/file_manager/inc",
+		"C:/msys64/mingw64/include/QtWidgets",
+		"C:/msys64/mingw64/include/QtGui",
+		"C:/msys64/mingw64/include/QtCore",
+		"C:/msys64/mingw64/share/qt5/mkspecs/win32-g++",
+		"C:/msys64/mingw64/include",
+		"C:/msys64/mingw64/include/c++/10.2.0",
+		"C:/msys64/mingw64/include/c++/10.2.0/x86_64-w64-mingw32",
+		"C:/msys64/mingw64/include/c++/10.2.0/backward",
+		"C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/10.2.0/include",
+		"C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/10.2.0/include-fixed",
+		"C:/msys64/mingw64/x86_64-w64-mingw32/include"
+	],
+	"MOC_MACRO_NAMES" : [ "Q_OBJECT", "Q_GADGET", "Q_NAMESPACE", "Q_NAMESPACE_EXPORT" ],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : true,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"C:/msys64/mingw64/bin/g++.exe",
+		"-dM",
+		"-E",
+		"-c",
+		"C:/Program Files/JetBrains/CLion 2020.2.3/bin/cmake/win/share/cmake-3.17/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "D:/UCU/Third/OS/file_manager/cmake-build-debug/filemanager_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 2,
+	"PARSE_CACHE_FILE" : "D:/UCU/Third/OS/file_manager/cmake-build-debug/CMakeFiles/filemanager_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "C:/msys64/mingw64/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "C:/msys64/mingw64/bin/uic.exe",
+	"QT_VERSION_MAJOR" : 5,
+	"QT_VERSION_MINOR" : 15,
+	"SETTINGS_FILE" : "D:/UCU/Third/OS/file_manager/cmake-build-debug/CMakeFiles/filemanager_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[ "D:/UCU/Third/OS/file_manager/main.cpp", "MU" ],
+		[ "D:/UCU/Third/OS/file_manager/src/archiving.cpp", "MU" ],
+		[ "D:/UCU/Third/OS/file_manager/src/filemanager.cpp", "MU" ]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"VERBOSITY" : 0
+}
