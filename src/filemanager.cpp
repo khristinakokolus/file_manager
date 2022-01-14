@@ -1,6 +1,6 @@
-#include "../inc/filemanager.h"
+#include "filemanager.h"
 #include "ui_filemanager.h"
-#include "../inc/archiving.h"
+#include "archiving.h"
 
 #include <QTreeView>
 #include <QMenu>
@@ -15,13 +15,12 @@
 #include <QProgressDialog>
 #include <QMimeDatabase>
 #include <QPushButton>
-
 #include <QMutex>
-
 #include <QTextEdit>
 #include <QListView>
 #include <QStringListModel>
 #include <QListWidget>
+
 
 FileManager::FileManager(QWidget *parent)
     : QMainWindow(parent)
@@ -41,12 +40,14 @@ FileManager::FileManager(QWidget *parent)
     ui->tableView->setModel(fileManager);
     ui->tableView_2->setModel(fileManager);
 
+    ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableView_2->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
     connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_tableView_doubleClicked(QModelIndex)));
     connect(ui->tableView_2, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_tableView_2_doubleClicked(QModelIndex)));
 
     connect(ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedFirst(QModelIndex)));
     connect(ui->tableView_2, SIGNAL(clicked(QModelIndex)), this, SLOT(clickedSecond(QModelIndex)));
-
 
 
     QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
@@ -117,7 +118,6 @@ FileManager::FileManager(QWidget *parent)
     zipAction->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_A));
     connect(zipAction, SIGNAL(triggered()), this, SLOT(zipFiles()));
 
-
     auto listArchiveAction = new QAction("List archive entries", this);
     copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
     connect(listArchiveAction, SIGNAL(triggered()), this, SLOT(listArchive()));
@@ -125,16 +125,19 @@ FileManager::FileManager(QWidget *parent)
 
     ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
-                                insertAction, deleteAction, renameAction, runAction, searchAction, unzipAction, zipAction, listArchiveAction});
+                                insertAction, deleteAction, renameAction, runAction, searchAction,
+                                unzipAction, zipAction, listArchiveAction});
 
     ui->tableView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView_2->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
-                                  insertAction, deleteAction, renameAction, runAction, searchAction, unzipAction, zipAction, listArchiveAction });
+                                  insertAction, deleteAction, renameAction, runAction, searchAction,
+                                  unzipAction, zipAction, listArchiveAction });
 }
 
 
 void FileManager::help(){
-    QString documentationText = "Welcome to a simple File Manager!\n\n\n Here is a small quide how to use it. All actions that can be performed using right mouse button:\n\n\n"
+    QString documentationText = "Welcome to a simple File Manager!\n\n\n Here is a small quide how to use it."
+                                " All actions that can be performed using right mouse button:\n\n\n"
                                 "1. Delete - delete the file or directory. Shortcut - Delete\n\n"
                                 "2. Copy - copy file or directory. Shortcut - CTRL+C\n\n"
                                 "3. Create directory - create new directory. Shortcut - D\n\n"
@@ -144,14 +147,16 @@ void FileManager::help(){
                                 "7. Open in hex - open file as hex representation. Shortcut - CTRL+H\n\n"
                                 "8. Rename - rename file or directory. Shortcut - CTRL+R\n\n"
                                 "9. Run - run the program. Shortcut - Enter\n\n"
-                                "10. Search - search for files in a certain directory and its subdirectories. Shortcut - CTRL+F\n\n";
+                                "10. Search - search for files in a certain directory and its subdirectories. Shortcut - CTRL+F\n\n"
+                                "11. Unzip - extract all files from the archive. Shortcut - Shift+S\n\n"
+                                "12. Zip - crete an archive. Shortcut - Shift+A\n\n"
+                                "13. List archive entries - get archive names of archive entries.";
     QMessageBox msgBox;
     msgBox.setWindowTitle("Usage guide");
     msgBox.setText(documentationText);
     msgBox.setTextInteractionFlags(Qt::TextSelectableByMouse);
     msgBox.exec();
 }
-
 
 
 void FileManager::windowMessage(QFile& file, const char *name, const char *text){
@@ -175,6 +180,7 @@ void FileManager::deleteItem() {
         deletion();
 
 }
+
 
 QModelIndex FileManager::getIndex() {
     QModelIndex index;
@@ -254,10 +260,6 @@ void FileManager::copyItemFrom(QString copyFromPath) {
 }
 
 
-
-
-
-
 void FileManager::copyItemTo(QString copyToPath) {
     QModelIndex index = getIndex();
 
@@ -334,6 +336,7 @@ void FileManager::copyItemTo(QString copyToPath) {
         }
     }
 
+
 void FileManager::openFile() {
     QModelIndex index = getIndex();
 
@@ -362,12 +365,10 @@ void FileManager::openHexFile() {
         }
     int bytes_per_line = 16;
 
-//    QMutexLocker lock(&m_dataMtx);
     QByteArray arr = file.readAll();
     int last_idx = arr.size() / bytes_per_line;
 
     QTextEdit *textEdit = new QTextEdit();
-//    setFont(QFont("Courier", 10));
     for (int line_idx = 0;  line_idx <= last_idx; line_idx += 1){
         QString address = QString("%1").arg(line_idx * bytes_per_line, 10, 16, QChar('0'));
 
@@ -411,8 +412,6 @@ void FileManager::openHexFile() {
  }
 
 
-
-
 void FileManager::renameItem() {
     QModelIndex index = getIndex();
 
@@ -452,7 +451,6 @@ void FileManager::renameItem() {
 }
 
 
-
 void FileManager::runProgram() {
     QModelIndex index = getIndex();
     QFileInfo fileInfo = fileManager->fileInfo(index);
@@ -461,6 +459,7 @@ void FileManager::runProgram() {
     QProcess::startDetached(absPath);
 
 }
+
 
 void FileManager::searchFiles() {
     bool ok;
@@ -543,6 +542,7 @@ QStringList FileManager::findFiles(const QStringList &files, const QString &text
 
 }
 
+
 void FileManager::createDirectory() {
     bool ok;
 
@@ -557,6 +557,7 @@ void FileManager::createDirectory() {
     dir.mkdir(dirName);
 }
 
+
 void FileManager::createFile() {
     bool ok;
     QString absPath = QInputDialog::getText(0, "Directory where to create new file",
@@ -568,18 +569,6 @@ void FileManager::createFile() {
     QFile file(absPath + fileName);
     file.open(QIODevice::WriteOnly);
 }
-
-
-//void FileManager::archiveFile() {
-//    QModelIndex index = getIndex();
-//
-//    QFileInfo fileInfo = fileManager->fileInfo(index);
-//    QString absPath = fileInfo.absoluteFilePath();
-//    QByteArray ba = absPath.toLocal8Bit();
-//    const char *path = ba.data();
-//    QFile file(absPath);
-//    write_archive(path);
-//}
 
 
 void FileManager::listArchive() {
@@ -612,16 +601,6 @@ void FileManager::listArchive() {
 
 }
 
-//void FileManager::extractArchive() {
-//    QModelIndex index = getIndex();
-//
-//    QFileInfo fileInfo = fileManager->fileInfo(index);
-//    QString absPath = fileInfo.absoluteFilePath();
-//    QByteArray ba = absPath.toLocal8Bit();
-//    const char *path = ba.data();
-//    QFile file(absPath);
-//    write_archive(path);
-//}
 
 void FileManager::unzipFiles() {
     QModelIndex index = getIndex();
@@ -631,8 +610,6 @@ void FileManager::unzipFiles() {
     QByteArray ba = absPath.toLocal8Bit();
     const char *path = ba.data();
     extract(path);
-//    QFile file(absPath);
-//    write_archive(path);
 }
 
 void FileManager::zipFiles() {
@@ -669,7 +646,6 @@ void FileManager::on_tableView_doubleClicked(const QModelIndex &index)
     else if (fileInfo.isDir()) {
         ui->tableView->setRootIndex(index);
     }
-
 }
 
 

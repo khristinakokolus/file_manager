@@ -1,4 +1,0 @@
-D:/UCU/Third/OS/file_manager/b/CMakeFiles/rebuild_cache.dir
-D:/UCU/Third/OS/file_manager/b/CMakeFiles/edit_cache.dir
-D:/UCU/Third/OS/file_manager/b/CMakeFiles/filemanager.dir
-D:/UCU/Third/OS/file_manager/b/CMakeFiles/filemanager_autogen.dir

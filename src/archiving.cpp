@@ -37,6 +37,7 @@ std::vector<std::string> list_entries(const char *filepath){
 }
 
 
+// Used code from https://stackoverflow.com/questions/40159892/using-asprintf-on-windows
 #ifdef _WIN32
 int vasprintf(char **strp, const char *fmt, va_list ap) {
     // _vscprintf tells you how big the buffer needs to be
@@ -59,6 +60,7 @@ int vasprintf(char **strp, const char *fmt, va_list ap) {
     return r;
 }
 
+// Used code from https://stackoverflow.com/questions/40159892/using-asprintf-on-windows
 int asprintf_win(char **strp, const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -68,8 +70,7 @@ int asprintf_win(char **strp, const char *fmt, ...) {
 }
 #endif
 
-static int
-copy_data(struct archive *ar, struct archive *aw)
+int copy_data(struct archive *ar, struct archive *aw)
 {
     int r;
     const void *buff;
@@ -90,7 +91,7 @@ copy_data(struct archive *ar, struct archive *aw)
     }
 }
 
-static int extract(const char *dirname){
+int extract(const char *dirname){
     struct archive *a;
     struct archive *ext;
     struct archive_entry *entry;
@@ -136,7 +137,6 @@ static int extract(const char *dirname){
 #endif
 
         archive_entry_set_pathname(entry, dest_file);
-        // printf(" writing %s\n", dest_file);
 
         r = archive_write_header(ext, entry);
         if (r < ARCHIVE_OK)
