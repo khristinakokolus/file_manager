@@ -28,8 +28,8 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif ()
 #
-#find_package(ICU REQUIRED COMPONENTS uc i18n)
-#find_package(Boost REQUIRED COMPONENTS iostreams filesystem locale system)
+find_package(ICU REQUIRED COMPONENTS uc i18n)
+find_package(Boost REQUIRED COMPONENTS iostreams filesystem locale system)
 find_package(LibArchive REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
@@ -39,15 +39,15 @@ set(Boost_USE_MULTITHREAD ON)  # enable multithreading
 
 include_directories(inc)
 include_directories(${LIBARCHIVE_INCLUDE_DIR})
-#include_directories(${Boost_INCLUDE_DIR} ${ICU_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIR} ${ICU_INCLUDE_DIRS})
 
 
 
-add_executable(${TARGET_NAME} ${PROJECT_RESOURCE} main.cpp ${SRC} src/filemanager.cpp src/filemanager.ui inc/filemanager.h)
+add_executable(${TARGET_NAME} ${PROJECT_RESOURCE} main.cpp ${SRC} src/filemanager.cpp src/filemanager.ui src/archiving.cpp inc/filemanager.h inc/archiving.h)
 
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
-#target_link_libraries(filemanager LINK_PUBLIC ${Boost_LIBRARIES} ${ICU_LIBRARIES} )
+target_link_libraries(filemanager LINK_PUBLIC ${Boost_LIBRARIES} ${ICU_LIBRARIES} )
 target_link_libraries(filemanager LINK_PUBLIC ${LibArchive_LIBRARIES})
 target_link_libraries(filemanager LINK_PUBLIC Qt5::Widgets)
 #target_link_libraries(filemanager LINK_PUBLIC Qt5::Sql)

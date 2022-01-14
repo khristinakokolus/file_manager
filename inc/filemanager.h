@@ -35,6 +35,7 @@ private slots:
     void createDirectory();
     void createFile();
     void help();
+    void archiveFile();
     void windowMessage(QFile& file,const char *name, const char *text);
 
     void on_tableView_doubleClicked(const QModelIndex &index);
@@ -51,6 +52,7 @@ private:
     QAction* openHexAction;
     QAction* renameAction;
     QAction* runAction;
+    QAction* archiveFileAction;
     QModelIndex fileFolderIndex;
     QMenu* contextMenu;
     bool clickedTreeViewFirst;

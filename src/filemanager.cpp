@@ -1,5 +1,6 @@
 #include "../inc/filemanager.h"
 #include "ui_filemanager.h"
+#include "archiving.h"
 
 #include <QTreeView>
 #include <QMenu>
@@ -104,13 +105,19 @@ FileManager::FileManager(QWidget *parent)
     searchAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F));
     connect(searchAction, SIGNAL(triggered()), this, SLOT(searchFiles()));
 
+
+    auto archiveFileAction = new QAction("Archive", this);
+    copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
+    connect(archiveFileAction, SIGNAL(triggered()), this, SLOT(archiveFile()));
+
+
     ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
-                                insertAction, deleteAction, renameAction, runAction, searchAction });
+                                insertAction, deleteAction, renameAction, runAction, searchAction, archiveFileAction});
 
     ui->tableView_2->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView_2->addActions({ openAction, openHexAction, copyAction, createDirectoryAction, createFileAction,
-                                  insertAction, deleteAction, renameAction, runAction, searchAction });
+                                  insertAction, deleteAction, renameAction, runAction, searchAction, archiveFileAction });
 }
 
 
@@ -233,6 +240,10 @@ void FileManager::copyItemFrom(QString copyFromPath) {
         files = sourceDir.entryList(QDir::Files);
         dirName = sourceDir.dirName();
 }
+
+
+
+
 
 
 void FileManager::copyItemTo(QString copyToPath) {
@@ -544,6 +555,18 @@ void FileManager::createFile() {
                                             "", &ok);
     QFile file(absPath + fileName);
     file.open(QIODevice::WriteOnly);
+}
+
+
+void FileManager::archiveFile() {
+    QModelIndex index = getIndex();
+
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();
+    QByteArray ba = absPath.toLocal8Bit();
+    const char *path = ba.data();
+    QFile file(absPath);
+    write_archive(path);
 }
 
 
