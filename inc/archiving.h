@@ -19,6 +19,9 @@
 #include <string>
 #include <boost/filesystem.hpp>
 
+static int copy_data(struct archive *ar, struct archive *aw);
+static int extract(const char *filename);
 void write_archive(const char *filename);
+std::vector<std::string>list_entries(const char *filepath);
 
 #endif //FILEMANAGER_ARCHIVING_H

@@ -14,11 +14,15 @@
 #include <QProcess>
 #include <QProgressDialog>
 #include <QMimeDatabase>
-
+#include <QPushButton>
 
 #include <QMutex>
 
 #include <QTextEdit>
+#include <QListView>
+#include <QStringListModel>
+#include <QListWidget>
+
 FileManager::FileManager(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::FileManager)
@@ -569,6 +573,61 @@ void FileManager::archiveFile() {
     write_archive(path);
 }
 
+class listview : QDialog
+{
+public:
+    listview(const QStringList &leaders, QWidget *parent);
+    void insert();
+    void del();
+    QStringList leaders() const;
+
+private:
+    QListView *listView;
+    QStringListModel *model;
+
+
+};
+
+void FileManager::listArchive() {
+    QModelIndex index = getIndex();
+
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();
+    QByteArray ba = absPath.toLocal8Bit();
+    const char *path = ba.data();
+    QFile file(absPath);
+    std::vector<std::string> entries = list_entries(path);
+    QVector<QString> qt;
+    qt.reserve(entries.size());
+    std::transform(entries.begin(), entries.end(), std::back_inserter(qt), [](const std::string &v){ return QString::fromStdString(v); });
+    QList<QString> entries_list = QList<QString>::fromVector(qt);
+
+    QDialog *dialog = new QDialog{this};
+    dialog->setWindowTitle(tr("Files in the archive: "));
+
+    auto button = new QPushButton{tr("OK"), this};
+    connect(button, &QPushButton::clicked, dialog, &QDialog::accept);
+
+    auto *layout = new QVBoxLayout{dialog};
+    QListWidget *listWidget = new QListWidget(this);
+    listWidget->addItems(entries_list);
+    layout->addWidget(listWidget);
+    layout->addWidget(button);
+
+    dialog->show();
+
+}
+
+void FileManager::extractArchive() {
+    QModelIndex index = getIndex();
+
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();
+    QByteArray ba = absPath.toLocal8Bit();
+    const char *path = ba.data();
+    QFile file(absPath);
+    write_archive(path);
+}
 
 void FileManager::clickedFirst(const QModelIndex &index) {
     clickedTreeViewFirst = true;
@@ -619,4 +678,3 @@ void FileManager::on_tableView_2_doubleClicked(const QModelIndex &index)
         ui->tableView_2->setRootIndex(index);
     }
 }
-
