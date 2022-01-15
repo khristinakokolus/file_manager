@@ -12,7 +12,7 @@ Welcome to the Сross-platform orthodox GUI file manager project!
 
 ## Description
 
-The main idea of this project is to create cross-platform orthodox GUI file manager using Qt framework. 
+The main idea of this project is to create cross-platform orthodox GUI file manager using Qt. 
 
 At the moment such functionality is implemented:
 
@@ -21,7 +21,11 @@ At the moment such functionality is implemented:
 - files and folders copying
 - files and folders renaming
 - error handling when copying and deleting files, folders
-
+- files search
+- files and folders creation
+- files opening in hex view
+- running exe programs
+- folders arhivation and unarchivation, possibility to see what files are in archive
 
 ## Prerequisites
 
@@ -36,30 +40,34 @@ Also you need:
 
 - **C++ compiler** - needs to support **C++17** standard
 - **CMake** 3.16+
-- **Qt Creator**
+- **LibArchive**
+- **LibZip**
 
 
 ## Usage
 
-Running from Qt Creator:
+Running from command prompt:
 
-- Open filesystem.pro file
-- Click Run button
+```
+cd file_manager
+mkdir build && cd build && cmake .. && make
+./filemanager
+```
 
-After that a file system window will appear.
+After that a file manager window will appear.
 
 ## GUI
 
 Initial view of filesystem:
 
-![image](https://user-images.githubusercontent.com/60686300/141324280-0e50284d-0001-4776-874f-fe451fea46a1.png)
+![Screenshot 2022-01-15 090528](https://user-images.githubusercontent.com/60686300/149612936-0d530ccf-eac3-4ee9-8779-a04b12979668.png)
 
 
 Commands that are now supported:
 
-![image](https://user-images.githubusercontent.com/60686300/141326493-4812261c-9d11-407c-b020-154c31ca8d75.png))
+![func](https://user-images.githubusercontent.com/60686300/149612968-88fe8716-0cef-4bea-8fff-89c1b3ba03f6.png)
 
 
 ## First presentation
 
-[First presentation slides](https://docs.google.com/presentation/d/1xPVH59MaYh2ianeHDTv_kOGeQmICnTemrLmcGMVIpr0/edit?usp=sharing)
+[Final presentation slides](https://docs.google.com/presentation/d/1lUsVkebr7rmr7RD618irmHtaPKhTO3-rOvxqew0hpXY/edit#slide=id.p1)
