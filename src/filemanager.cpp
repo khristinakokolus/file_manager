@@ -1,6 +1,7 @@
 #include "filemanager.h"
 #include "ui_filemanager.h"
 #include "archiving.h"
+#include <iostream>
 
 #include <QTreeView>
 #include <QMenu>
@@ -468,8 +469,8 @@ void FileManager::searchFiles() {
                                          "Directory:", QLineEdit::Normal,
                                          "", &ok);
     QString fileToFind = QInputDialog::getText(0, "Finding files",
-                                         "File to find:", QLineEdit::Normal,
-                                         "", &ok);
+                                               "File to find:", QLineEdit::Normal,
+                                               "", &ok);
     QStringList filter;
     if (!fileToFind.isEmpty())
         filter << fileToFind;
@@ -482,25 +483,28 @@ void FileManager::searchFiles() {
 
     QString found;
 
-    if (files.empty()) {
-        found = "There are no files containing in the name " "'"  + fileToFind + "'     ";
-    }
-    else {
-        found = "Found files containing in the name " "'"  + fileToFind + "': " + "\n";
-        for (auto &file : files) {
-            found += file + "\n";
-        }
-    }
+//    if (files.empty()) {
+//        found = "There are no files containing in the name " "'"  + fileToFind + "'     ";
+//    }
+//    else {
+//        found = "Found files containing in the name " "'"  + fileToFind + "': " + "\n";
+//        for (auto &file : files) {
+//            found += file + "\n";
+//        }
+//    }
 
-    QMessageBox msgBox;
-    msgBox.setWindowTitle("Found files");
-    msgBox.setText(found);
-    msgBox.addButton(QMessageBox::Open);
-    msgBox.setTextInteractionFlags(Qt::TextSelectableByMouse);
-    msgBox.setStandardButtons(QMessageBox::Open |
-    QMessageBox::Ok);
-    if (msgBox.exec() == QMessageBox::Open)
-        openFileByPath();
+    QDialog *dialog = new QDialog{this};
+    dialog->setWindowTitle(tr("Files found: "));
+
+    auto button = new QPushButton{tr("OK"), this};
+    connect(button, &QPushButton::clicked, dialog, &QDialog::accept);
+
+    auto *layout = new QVBoxLayout{dialog};
+    QListWidget *listWidget = new QListWidget(this);
+    listWidget->addItems(files);
+    layout->addWidget(listWidget);
+    layout->addWidget(button);
+    dialog->show();
 }
 
 
@@ -613,7 +617,19 @@ void FileManager::unzipFiles() {
 }
 
 void FileManager::zipFiles() {
+    QModelIndex index = getIndex();
 
+    QFileInfo fileInfo = fileManager->fileInfo(index);
+    QString absPath = fileInfo.absoluteFilePath();
+    QByteArray ba = absPath.toLocal8Bit();
+    const char *path = ba.data();
+    std::string str_path = path;
+    size_t last_slash = str_path.find_last_of('/');
+    std::string folder_to = str_path.substr(0, last_slash);
+    std::string folder_name = str_path.substr(last_slash, str_path.size());
+
+    std::string archive = folder_to + folder_name + ".zip";
+    make_archive(path, archive);
 }
 
 void FileManager::clickedFirst(const QModelIndex &index) {

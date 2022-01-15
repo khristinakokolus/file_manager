@@ -1,7 +1,5 @@
 #include <sys/types.h>
-
 #include <sys/stat.h>
-
 #include <archive.h>
 #include <archive_entry.h>
 #include <fcntl.h>
@@ -11,7 +9,9 @@
 #include <unistd.h>
 #include <string>
 #include <boost/filesystem.hpp>
-
+#include <string>
+#include <dirent.h>
+#include <zip.h>
 
 std::vector<std::string> list_entries(const char *filepath){
 
@@ -98,7 +98,6 @@ int extract(const char *dirname){
     int flags;
     int r;
 
-    /* Select which attributes we want to restore. */
     flags = ARCHIVE_EXTRACT_TIME;
     flags |= ARCHIVE_EXTRACT_PERM;
     flags |= ARCHIVE_EXTRACT_ACL;
@@ -162,4 +161,41 @@ int extract(const char *dirname){
     archive_write_close(ext);
     archive_write_free(ext);
     return 0;
+}
+
+
+void find_files(const std::string& archive_dir, const std::string& search_dir, zip_t *zip_creator)
+{
+    struct dirent *dir;
+    std::string dir_name;
+    struct stat st;
+
+    DIR *dir_pointer = opendir(search_dir.c_str());
+
+    while ((dir = readdir(dir_pointer)) != NULL) {
+        dir_name = dir->d_name;
+        if (dir_name != "." && dir_name != "..") {
+            std::string path = search_dir + "/" + dir_name;
+            stat(path.c_str(), &st);
+
+            std::string path_substr = path.substr(archive_dir.length() + 1);
+            if (S_ISDIR(st.st_mode)) {
+                zip_dir_add(zip_creator, path_substr.c_str(), ZIP_FL_ENC_UTF_8);
+                find_files(archive_dir, path, zip_creator);
+            } else {
+                zip_file_add(zip_creator, path_substr.c_str(),
+                             zip_source_file(zip_creator, path.c_str(), 0, 0), ZIP_FL_ENC_UTF_8);
+            }
+        }
+    }
+    closedir(dir_pointer);
+}
+
+void make_archive(const std::string& dir_to_archive, const std::string& archive_name)
+{
+    int error;
+    zip_t *zip_creator = zip_open(archive_name.c_str(), ZIP_CREATE | ZIP_EXCL, &error);
+
+    find_files(dir_to_archive, dir_to_archive, zip_creator);
+    zip_close(zip_creator);
 }
