@@ -610,10 +610,35 @@ void FileManager::unzipFiles() {
     QModelIndex index = getIndex();
 
     QFileInfo fileInfo = fileManager->fileInfo(index);
+    extension = fileInfo.completeSuffix();
+    qDebug() << extension;
     QString absPath = fileInfo.absoluteFilePath();
     QByteArray ba = absPath.toLocal8Bit();
     const char *path = ba.data();
-    extract(path);
+    if (extension == "zip"){
+
+        int e = extract(path);
+        if (e != 0){
+            QMessageBox::critical(
+                    this,
+                    tr("Unzip failed"),
+                    tr("Could not unzip %1").arg(path)
+            );
+            return;
+
+        }
+    }
+    else{
+        QMessageBox::critical(
+                this,
+                tr("Unzip failed"),
+                tr("Not an archive: %1").arg(path)
+        );
+        return;
+
+    }
+
+
 }
 
 void FileManager::zipFiles() {
